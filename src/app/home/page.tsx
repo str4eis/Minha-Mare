@@ -4,12 +4,14 @@ import Link from "next/link";
 import { TrendingUp, Wallet, Home as HomeIcon, BarChart3, Target } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
-import { formatBRL, formatDateShort } from "@/lib/format";
+import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { saleCategoryMeta } from "@/lib/categories";
+import { filterByMonth } from "@/lib/period";
 
 export default function HomePage() {
-  const { state, totals } = useStore();
+  const { state, totals, selectedMonth } = useStore();
 
   const vendasShare =
     totals.totalVendido + totals.totalGastos === 0
@@ -18,20 +20,31 @@ export default function HomePage() {
           (totals.totalVendido / (totals.totalVendido + totals.totalGastos)) * 100
         );
 
-  const aposentadoriaPct = Math.min(
-    100,
-    Math.round((state.poupancaAposentadoria / state.metaAposentadoria) * 100)
-  );
+  const aposentadoriaPct =
+    state.metaAposentadoria > 0
+      ? Math.min(
+          100,
+          Math.round((state.poupancaAposentadoria / state.metaAposentadoria) * 100)
+        )
+      : 0;
 
-  const recentSales = state.sales.slice(0, 3);
+  const monthLabel = currentMonthLabel(selectedMonth.year, selectedMonth.month);
+  const recentSales = filterByMonth(
+    [...state.sales].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    ),
+    selectedMonth.year,
+    selectedMonth.month
+  ).slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
       <Header />
+      <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
         <h1 className="text-[26px] font-semibold leading-tight">
-          Olá, {state.userName}!
+          {state.userName ? `Olá, ${state.userName}!` : "Olá!"}
         </h1>
         <p className="mt-1 text-mare-slate">
           A maré está subindo. Ótimo dia para a coleta!
@@ -40,7 +53,7 @@ export default function HomePage() {
         {/* Resumo do mês */}
         <section className="mt-5 rounded-xl2 bg-mare-card p-5 shadow-card">
           <p className="text-xs font-semibold tracking-widest text-mare-slate uppercase">
-            Resumo do mês
+            Resumo de {monthLabel}
           </p>
           <div className="mt-3 grid grid-cols-3 gap-2">
             <div>
@@ -126,7 +139,9 @@ export default function HomePage() {
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-mare-ink">Minha Aposentadoria</p>
             <p className="text-sm text-mare-slate">
-              Você atingiu {aposentadoriaPct}% da sua meta mensal.
+              {state.metaAposentadoria > 0
+                ? `Você atingiu ${aposentadoriaPct}% da sua meta mensal.`
+                : "Sua meta mensal ainda não foi definida."}
             </p>
             <div className="mt-2 h-1.5 w-full rounded-full bg-mare-purpleLight overflow-hidden">
               <div

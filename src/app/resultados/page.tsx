@@ -4,13 +4,15 @@ import { useState } from "react";
 import { Banknote, Ship, Home as HomeIcon, FileDown, Sheet, Share2 } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
 import { formatBRL, currentMonthLabel } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 export default function ResultadosPage() {
-  const { totals } = useStore();
+  const { totals, selectedMonth } = useStore();
   const [toast, setToast] = useState<string | null>(null);
+  const monthLabel = currentMonthLabel(selectedMonth.year, selectedMonth.month);
 
   const gastoPct =
     totals.totalVendido === 0
@@ -25,7 +27,7 @@ export default function ResultadosPage() {
   };
 
   const shareText = encodeURIComponent(
-    `Resultado de ${currentMonthLabel()} — Minha Maré\n` +
+    `Resultado de ${monthLabel} — Minha Maré\n` +
       `Total vendido: ${formatBRL(totals.totalVendido)}\n` +
       `Gastos da pesca: ${formatBRL(totals.totalGastosPesca)}\n` +
       `Gastos da casa: ${formatBRL(totals.totalGastosCasa)}\n` +
@@ -35,10 +37,11 @@ export default function ResultadosPage() {
   return (
     <div className="flex flex-col min-h-dvh bg-white">
       <Header />
+      <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
         <h1 className="text-2xl font-semibold">Meu Resultado</h1>
-        <p className="text-mare-slate mt-1">{currentMonthLabel()}</p>
+        <p className="text-mare-slate mt-1">{monthLabel}</p>
 
         <div className="mt-4 rounded-xl2 bg-mare-purple text-white p-5 shadow-soft flex items-center justify-between">
           <div>

@@ -9,6 +9,7 @@ import { useStore } from "@/lib/store";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
 import { ExpenseKind, FishingExpenseCategory, HomeExpenseCategory } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { parseMoneyInput } from "@/lib/format";
 
 function NovoGastoContent() {
   const router = useRouter();
@@ -29,11 +30,11 @@ function NovoGastoContent() {
   const [description, setDescription] = useState("");
   const [value, setValue] = useState("");
 
-  const numericValue = Number(value.replace(",", ".")) || 0;
-  const canSave = numericValue > 0;
+  const numericValue = parseMoneyInput(value);
+  const canSave = numericValue !== null;
 
   const handleSave = () => {
-    if (!canSave) return;
+    if (numericValue === null) return;
     addExpense({
       kind,
       category,

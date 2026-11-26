@@ -6,28 +6,33 @@ import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
-import { formatBRL, formatDateShort } from "@/lib/format";
+import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
 import { ExpenseKind } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { filterByMonth } from "@/lib/period";
 
 function GastosContent() {
   const params = useSearchParams();
   const initialTab = (params.get("tab") as ExpenseKind) || "pesca";
   const [tab, setTab] = useState<ExpenseKind>(initialTab);
-  const { state, totals } = useStore();
+  const { state, totals, selectedMonth } = useStore();
 
   const meta = tab === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
   const total = tab === "pesca" ? totals.totalGastosPesca : totals.totalGastosCasa;
+  const monthLabel = currentMonthLabel(selectedMonth.year, selectedMonth.month);
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
-    state.expenses
+    filterByMonth(state.expenses, selectedMonth.year, selectedMonth.month)
       .filter((e) => e.kind === tab)
-      .forEach((e) => map.set(e.category, (map.get(e.category) ?? 0) + e.value));
+      .forEach((e) =>
+        map.set(e.category, (map.get(e.category) ?? 0) + Math.round(e.value * 100))
+      );
     return map;
-  }, [state.expenses, tab]);
+  }, [state.expenses, selectedMonth, tab]);
 
   const recent = useMemo(
     () =>
@@ -41,6 +46,7 @@ function GastosContent() {
   return (
     <div className="flex flex-col min-h-dvh bg-white">
       <Header />
+      <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
         <h1 className="text-2xl font-semibold">Gastos</h1>
@@ -73,7 +79,7 @@ function GastosContent() {
           )}
         >
           <p className="text-xs font-semibold tracking-widest uppercase text-mare-slate">
-            Total {tab === "pesca" ? "com a pesca" : "com a casa"} no mês
+            Total {tab === "pesca" ? "com a pesca" : "com a casa"} em {monthLabel}
           </p>
           <p
             className={cn(
@@ -92,7 +98,7 @@ function GastosContent() {
           {(Object.keys(meta) as Array<keyof typeof meta>).map((cat) => {
             const m = meta[cat];
             const Icon = m.icon;
-            const spent = byCategory.get(cat as string) ?? 0;
+            const spent = (byCategory.get(cat as string) ?? 0) / 100;
             return (
               <Link
                 key={cat as string}
