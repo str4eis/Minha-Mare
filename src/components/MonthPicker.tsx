@@ -6,9 +6,10 @@ import { currentMonthLabel } from "@/lib/format";
 import { getCurrentMonth } from "@/lib/period";
 
 export default function MonthPicker() {
-  const { selectedMonth, changeMonth } = useStore();
-  const currentMonth = getCurrentMonth();
+  const { hydrated, selectedMonth, changeMonth } = useStore();
+  const currentMonth = hydrated ? getCurrentMonth() : null;
   const isCurrentMonth =
+    currentMonth !== null &&
     selectedMonth.year === currentMonth.year &&
     selectedMonth.month === currentMonth.month;
 
@@ -17,8 +18,9 @@ export default function MonthPicker() {
       <button
         type="button"
         onClick={() => changeMonth(-1)}
+        disabled={!hydrated}
         aria-label="Mês anterior"
-        className="flex h-10 w-10 items-center justify-center rounded-full text-mare-purple hover:bg-mare-purpleLight"
+        className="flex h-10 w-10 items-center justify-center rounded-full text-mare-purple hover:bg-mare-purpleLight disabled:cursor-not-allowed disabled:opacity-30"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
@@ -27,13 +29,15 @@ export default function MonthPicker() {
           Mês selecionado
         </p>
         <p className="font-semibold text-mare-ink">
-          {currentMonthLabel(selectedMonth.year, selectedMonth.month)}
+          {hydrated
+            ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
+            : "—"}
         </p>
       </div>
       <button
         type="button"
         onClick={() => changeMonth(1)}
-        disabled={isCurrentMonth}
+        disabled={!hydrated || isCurrentMonth}
         aria-label="Próximo mês"
         className="flex h-10 w-10 items-center justify-center rounded-full text-mare-purple hover:bg-mare-purpleLight disabled:cursor-not-allowed disabled:opacity-30"
       >

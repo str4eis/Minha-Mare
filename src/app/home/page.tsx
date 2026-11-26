@@ -11,24 +11,26 @@ import { saleCategoryMeta } from "@/lib/categories";
 import { filterByMonth } from "@/lib/period";
 
 export default function HomePage() {
-  const { state, totals, selectedMonth } = useStore();
+  const { state, totals, selectedMonth, hydrated } = useStore();
 
   const vendasShare =
-    totals.totalVendido + totals.totalGastos === 0
+    !hydrated || totals.totalVendido + totals.totalGastos === 0
       ? 50
       : Math.round(
           (totals.totalVendido / (totals.totalVendido + totals.totalGastos)) * 100
         );
 
   const aposentadoriaPct =
-    state.metaAposentadoria > 0
+    hydrated && state.metaAposentadoria > 0
       ? Math.min(
           100,
           Math.round((state.poupancaAposentadoria / state.metaAposentadoria) * 100)
         )
       : 0;
 
-  const monthLabel = currentMonthLabel(selectedMonth.year, selectedMonth.month);
+  const monthLabel = hydrated
+    ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
+    : "—";
   const recentSales = filterByMonth(
     [...state.sales].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -59,19 +61,19 @@ export default function HomePage() {
             <div>
               <p className="text-xs text-mare-slate">Vendas</p>
               <p className="mt-0.5 font-semibold text-mare-tealDark">
-                {formatBRL(totals.totalVendido)}
+                {hydrated ? formatBRL(totals.totalVendido) : "—"}
               </p>
             </div>
             <div>
               <p className="text-xs text-mare-slate">Gastos</p>
               <p className="mt-0.5 font-semibold text-[#B23B5C]">
-                {formatBRL(totals.totalGastos)}
+                {hydrated ? formatBRL(totals.totalGastos) : "—"}
               </p>
             </div>
             <div>
               <p className="text-xs text-mare-slate">Resultado</p>
               <p className="mt-0.5 font-semibold text-mare-purple">
-                {formatBRL(totals.resultado)}
+                {hydrated ? formatBRL(totals.resultado) : "—"}
               </p>
             </div>
           </div>
@@ -139,7 +141,9 @@ export default function HomePage() {
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-mare-ink">Minha Aposentadoria</p>
             <p className="text-sm text-mare-slate">
-              {state.metaAposentadoria > 0
+              {!hydrated
+                ? "—"
+                : state.metaAposentadoria > 0
                 ? `Você atingiu ${aposentadoriaPct}% da sua meta mensal.`
                 : "Sua meta mensal ainda não foi definida."}
             </p>
@@ -161,12 +165,12 @@ export default function HomePage() {
             </Link>
           </div>
           <ul className="mt-2 divide-y divide-black/5">
-            {recentSales.length === 0 && (
+            {hydrated && recentSales.length === 0 && (
               <li className="py-4 text-sm text-mare-slate">
                 Nenhuma venda registrada ainda.
               </li>
             )}
-            {recentSales.map((sale) => {
+            {hydrated && recentSales.map((sale) => {
               const meta = saleCategoryMeta[sale.category];
               const Icon = meta.icon;
               return (

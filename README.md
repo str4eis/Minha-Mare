@@ -37,9 +37,13 @@ os dados adicionados persistem entre sessões no mesmo navegador.
 Os totais e o resumo consideram o mês selecionado no fuso `America/Recife`. Use as setas
 do seletor mensal para consultar meses anteriores; o mês futuro não pode ser selecionado.
 
+Se o conteúdo salvo estiver corrompido, o app preserva uma cópia em
+`minha-mare:v1:backup` e mantém a chave original até um novo lançamento ser registrado.
+
 ## Testes
 
 ```bash
+npm run lint
 npm test
 ```
 

@@ -14,18 +14,12 @@ import {
   getCurrentMonth,
   SelectedMonth,
 } from "./period";
-
-const STORAGE_KEY = "minha-mare:v1";
-const DEMO_SALE_IDS = new Set(["s1", "s2", "s3", "s4", "s5"]);
-const DEMO_EXPENSE_IDS = new Set(["e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9"]);
-const emptyState: AppState = {
-  userName: "",
-  onboarded: false,
-  sales: [],
-  expenses: [],
-  metaAposentadoria: 0,
-  poupancaAposentadoria: 0,
-};
+import {
+  backupCorruptedStoredState,
+  createEmptyAppState,
+  migrateStoredState,
+  STORAGE_KEY,
+} from "./storage";
 
 interface StoreContextValue {
   state: AppState;
@@ -47,39 +41,41 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(emptyState);
+  const [state, setState] = useState<AppState>(createEmptyAppState);
   const [selectedMonth, setSelectedMonth] = useState<SelectedMonth>(getCurrentMonth);
   const [hydrated, setHydrated] = useState(false);
+  const [canPersist, setCanPersist] = useState(true);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const storedState = JSON.parse(raw) as AppState;
-        setState({
-          ...storedState,
-          userName: storedState.userName === "Maria da Maré" ? "" : storedState.userName,
-          sales: storedState.sales.filter((sale) => !DEMO_SALE_IDS.has(sale.id)),
-          expenses: storedState.expenses.filter(
-            (expense) => !DEMO_EXPENSE_IDS.has(expense.id)
-          ),
-          metaAposentadoria:
-            storedState.metaAposentadoria === 500 ? 0 : storedState.metaAposentadoria,
-          poupancaAposentadoria:
-            storedState.poupancaAposentadoria === 225 ? 0 : storedState.poupancaAposentadoria,
-        });
+      const migration = migrateStoredState(raw);
+      setState(migration.state);
+      setCanPersist(migration.ok);
+
+      if (!migration.ok) {
+        try {
+          backupCorruptedStoredState(raw, window.localStorage);
+        } catch (error) {
+          console.error("Não foi possível preservar o backup dos dados locais.", error);
+        }
       }
-    } catch {
-      // ignore corrupted storage
+    } catch (error) {
+      setCanPersist(false);
+      console.error("Não foi possível ler os dados locais.", error);
     } finally {
       setHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state, hydrated]);
+    if (!hydrated || !canPersist) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error("Não foi possível salvar os dados locais.", error);
+    }
+  }, [state, hydrated, canPersist]);
 
   const changeMonth = (offset: -1 | 1) => {
     setSelectedMonth((previous) => {
@@ -112,6 +108,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       date: new Date().toISOString(),
     };
     setState((prev) => ({ ...prev, sales: [newSale, ...prev.sales] }));
+    setCanPersist(true);
   };
 
   const addExpense = (expense: Omit<Expense, "id" | "date">) => {
@@ -121,6 +118,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       date: new Date().toISOString(),
     };
     setState((prev) => ({ ...prev, expenses: [newExpense, ...prev.expenses] }));
+    setCanPersist(true);
   };
 
   const finishOnboarding = () => {

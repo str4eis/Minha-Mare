@@ -10,12 +10,14 @@ import { formatBRL, currentMonthLabel } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 export default function ResultadosPage() {
-  const { totals, selectedMonth } = useStore();
+  const { totals, selectedMonth, hydrated } = useStore();
   const [toast, setToast] = useState<string | null>(null);
-  const monthLabel = currentMonthLabel(selectedMonth.year, selectedMonth.month);
+  const monthLabel = hydrated
+    ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
+    : "—";
 
   const gastoPct =
-    totals.totalVendido === 0
+    !hydrated || totals.totalVendido === 0
       ? 0
       : Math.min(100, Math.round((totals.totalGastos / totals.totalVendido) * 100));
 
@@ -26,13 +28,15 @@ export default function ResultadosPage() {
     window.setTimeout(() => setToast(null), 2200);
   };
 
-  const shareText = encodeURIComponent(
-    `Resultado de ${monthLabel} — Minha Maré\n` +
-      `Total vendido: ${formatBRL(totals.totalVendido)}\n` +
-      `Gastos da pesca: ${formatBRL(totals.totalGastosPesca)}\n` +
-      `Gastos da casa: ${formatBRL(totals.totalGastosCasa)}\n` +
-      `Resultado final: ${formatBRL(totals.resultado)}`
-  );
+  const shareText = hydrated
+    ? encodeURIComponent(
+        `Resultado de ${monthLabel} — Minha Maré\n` +
+          `Total vendido: ${formatBRL(totals.totalVendido)}\n` +
+          `Gastos da pesca: ${formatBRL(totals.totalGastosPesca)}\n` +
+          `Gastos da casa: ${formatBRL(totals.totalGastosCasa)}\n` +
+          `Resultado final: ${formatBRL(totals.resultado)}`
+      )
+    : "";
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
@@ -46,7 +50,9 @@ export default function ResultadosPage() {
         <div className="mt-4 rounded-xl2 bg-mare-purple text-white p-5 shadow-soft flex items-center justify-between">
           <div>
             <p className="text-sm text-white/75">Total Vendido</p>
-            <p className="text-2xl font-semibold mt-1">{formatBRL(totals.totalVendido)}</p>
+            <p className="text-2xl font-semibold mt-1">
+              {hydrated ? formatBRL(totals.totalVendido) : "—"}
+            </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
             <Banknote className="h-5 w-5" />
@@ -57,7 +63,7 @@ export default function ResultadosPage() {
           <div>
             <p className="text-sm text-mare-tealDark/80">Gastos da Pesca</p>
             <p className="text-2xl font-semibold mt-1 text-mare-tealDark">
-              {formatBRL(totals.totalGastosPesca)}
+              {hydrated ? formatBRL(totals.totalGastosPesca) : "—"}
             </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/50 flex items-center justify-center">
@@ -69,7 +75,7 @@ export default function ResultadosPage() {
           <div>
             <p className="text-sm text-mare-yellowDark/80">Gastos da Casa</p>
             <p className="text-2xl font-semibold mt-1 text-mare-yellowDark">
-              {formatBRL(totals.totalGastosCasa)}
+              {hydrated ? formatBRL(totals.totalGastosCasa) : "—"}
             </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/50 flex items-center justify-center">
@@ -84,7 +90,7 @@ export default function ResultadosPage() {
               positivo ? "bg-mare-tealDark text-white" : "bg-[#B23B5C] text-white"
             )}
           >
-            {positivo ? "🙂" : "😟"}
+            {hydrated ? (positivo ? "🙂" : "😟") : "—"}
           </span>
           <p className="mt-3 font-semibold text-mare-ink">Resultado Final</p>
           <p
@@ -93,7 +99,7 @@ export default function ResultadosPage() {
               positivo ? "text-mare-tealDark" : "text-[#B23B5C]"
             )}
           >
-            {formatBRL(totals.resultado)}
+            {hydrated ? formatBRL(totals.resultado) : "—"}
           </p>
           <span
             className={cn(
@@ -101,13 +107,15 @@ export default function ResultadosPage() {
               positivo ? "bg-mare-tealLight text-mare-tealDark" : "bg-[#F3C9D3] text-[#B23B5C]"
             )}
           >
-            {positivo ? "Lucro do Mês" : "Prejuízo do Mês"}
+            {hydrated ? (positivo ? "Lucro do Mês" : "Prejuízo do Mês") : "—"}
           </span>
 
           <div className="mt-5 text-left">
             <div className="flex items-center justify-between text-xs text-mare-slate">
               <span>Gastos Totais vs Vendas</span>
-              <span className="font-semibold text-mare-ink">{gastoPct}% gasto</span>
+              <span className="font-semibold text-mare-ink">
+                {hydrated ? `${gastoPct}% gasto` : "—"}
+              </span>
             </div>
             <div className="mt-2 h-2 w-full rounded-full bg-mare-card overflow-hidden">
               <div
@@ -116,8 +124,8 @@ export default function ResultadosPage() {
               />
             </div>
             <div className="mt-1.5 flex items-center justify-between text-xs text-mare-slate">
-              <span>{formatBRL(totals.totalGastos)} gastos</span>
-              <span>{formatBRL(totals.totalVendido)} meta</span>
+              <span>{hydrated ? `${formatBRL(totals.totalGastos)} gastos` : "—"}</span>
+              <span>{hydrated ? `${formatBRL(totals.totalVendido)} meta` : "—"}</span>
             </div>
           </div>
         </div>
@@ -137,7 +145,9 @@ export default function ResultadosPage() {
           </svg>
           <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/50 to-transparent">
             <p className="font-display italic text-white text-sm leading-snug">
-              {positivo
+              {!hydrated
+                ? "—"
+                : positivo
                 ? "Parabéns! Sua maré está produtiva este mês."
                 : "Toda maré tem seu tempo. Vamos ajustar os gastos?"}
             </p>
@@ -162,10 +172,13 @@ export default function ResultadosPage() {
         </div>
 
         <a
-          href={`https://wa.me/?text=${shareText}`}
+          href={hydrated ? `https://wa.me/?text=${shareText}` : undefined}
+          aria-disabled={!hydrated}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 w-full flex items-center justify-center gap-2 rounded-full bg-mare-tealDark text-white py-3.5 font-semibold shadow-soft"
+          className={`mt-3 w-full flex items-center justify-center gap-2 rounded-full bg-mare-tealDark text-white py-3.5 font-semibold shadow-soft ${
+            hydrated ? "" : "pointer-events-none opacity-50"
+          }`}
         >
           <Share2 className="h-4 w-4" />
           Compartilhar no WhatsApp

@@ -18,11 +18,13 @@ function GastosContent() {
   const params = useSearchParams();
   const initialTab = (params.get("tab") as ExpenseKind) || "pesca";
   const [tab, setTab] = useState<ExpenseKind>(initialTab);
-  const { state, totals, selectedMonth } = useStore();
+  const { state, totals, selectedMonth, hydrated } = useStore();
 
   const meta = tab === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
   const total = tab === "pesca" ? totals.totalGastosPesca : totals.totalGastosCasa;
-  const monthLabel = currentMonthLabel(selectedMonth.year, selectedMonth.month);
+  const monthLabel = hydrated
+    ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
+    : "—";
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
@@ -87,7 +89,7 @@ function GastosContent() {
               tab === "pesca" ? "text-mare-tealDark" : "text-mare-yellowDark"
             )}
           >
-            {formatBRL(total)}
+            {hydrated ? formatBRL(total) : "—"}
           </p>
         </div>
 
@@ -109,7 +111,7 @@ function GastosContent() {
                 <div>
                   <p className="font-semibold text-mare-ink text-sm">{m.label}</p>
                   <p className="text-xs text-mare-slate mt-0.5">
-                    {spent > 0 ? formatBRL(spent) : "Adicionar"}
+                    {!hydrated ? "—" : spent > 0 ? formatBRL(spent) : "Adicionar"}
                   </p>
                 </div>
               </Link>
@@ -121,10 +123,10 @@ function GastosContent() {
           <p className="font-semibold text-mare-ink">Lançamentos recentes</p>
         </div>
         <ul className="mt-2 divide-y divide-black/5">
-          {recent.length === 0 && (
+          {hydrated && recent.length === 0 && (
             <li className="py-4 text-sm text-mare-slate">Nenhum gasto lançado ainda.</li>
           )}
-          {recent.map((e) => {
+          {hydrated && recent.map((e) => {
             const m = meta[e.category as keyof typeof meta];
             const Icon = m?.icon;
             return (

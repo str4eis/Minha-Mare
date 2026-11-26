@@ -10,8 +10,10 @@ import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { saleCategoryMeta } from "@/lib/categories";
 
 export default function VendasPage() {
-  const { state, totals, selectedMonth } = useStore();
-  const monthLabel = currentMonthLabel(selectedMonth.year, selectedMonth.month);
+  const { state, totals, selectedMonth, hydrated } = useStore();
+  const monthLabel = hydrated
+    ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
+    : "—";
 
   const sortedSales = [...state.sales].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -29,7 +31,9 @@ export default function VendasPage() {
         <div className="mt-4 rounded-xl2 bg-mare-purple text-white p-5 shadow-soft flex items-center justify-between">
           <div>
             <p className="text-sm text-white/75">Total vendido em {monthLabel}</p>
-            <p className="text-2xl font-semibold mt-1">{formatBRL(totals.totalVendido)}</p>
+            <p className="text-2xl font-semibold mt-1">
+              {hydrated ? formatBRL(totals.totalVendido) : "—"}
+            </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
             <Plus className="h-5 w-5" />
@@ -37,12 +41,12 @@ export default function VendasPage() {
         </div>
 
         <ul className="mt-5 divide-y divide-black/5">
-          {sortedSales.length === 0 && (
+          {hydrated && sortedSales.length === 0 && (
             <li className="py-6 text-center text-sm text-mare-slate">
               Você ainda não registrou nenhuma venda.
             </li>
           )}
-          {sortedSales.map((sale) => {
+          {hydrated && sortedSales.map((sale) => {
             const meta = saleCategoryMeta[sale.category];
             const Icon = meta.icon;
             return (
