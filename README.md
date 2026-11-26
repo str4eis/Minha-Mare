@@ -30,9 +30,22 @@ npm start
 
 ## Dados
 
-Os dados (vendas, gastos) ficam salvos no `localStorage` do navegador — não há backend.
-Um conjunto de dados de exemplo é carregado na primeira visita; tudo que você adicionar
-fica salvo automaticamente e persiste entre sessões no mesmo navegador.
+Os dados (vendas, gastos) ficam salvos no `localStorage` do navegador — ainda não há
+backend nem sincronização entre dispositivos. O app inicia sem lançamentos de exemplo;
+os dados adicionados persistem entre sessões no mesmo navegador.
+
+Os totais e o resumo consideram o mês selecionado no fuso `America/Recife`. Use as setas
+do seletor mensal para consultar meses anteriores; o mês futuro não pode ser selecionado.
+
+Se o conteúdo salvo estiver corrompido, o app preserva uma cópia em
+`minha-mare:v1:backup` e mantém a chave original até um novo lançamento ser registrado.
+
+## Testes
+
+```bash
+npm run lint
+npm test
+```
 
 ## Stack
 

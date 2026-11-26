@@ -9,6 +9,7 @@ import { useStore } from "@/lib/store";
 import { saleCategoryMeta } from "@/lib/categories";
 import { SaleCategory } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { parseMoneyInput } from "@/lib/format";
 
 const categories: SaleCategory[] = [
   "ostra",
@@ -29,11 +30,11 @@ export default function NovaVendaPage() {
   const [buyer, setBuyer] = useState("");
   const [value, setValue] = useState("");
 
-  const numericValue = Number(value.replace(",", ".")) || 0;
-  const canSave = numericValue > 0;
+  const numericValue = parseMoneyInput(value);
+  const canSave = numericValue !== null;
 
   const handleSave = () => {
-    if (!canSave) return;
+    if (numericValue === null) return;
     addSale({
       category,
       buyer: buyer.trim() || "Venda avulsa",
