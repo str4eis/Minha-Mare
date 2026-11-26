@@ -167,7 +167,7 @@ export default function HomePage() {
           <ul className="mt-2 divide-y divide-black/5">
             {hydrated && recentSales.length === 0 && (
               <li className="py-4 text-sm text-mare-slate">
-                Nenhuma venda registrada ainda.
+                Nenhuma venda em {monthLabel}.
               </li>
             )}
             {hydrated && recentSales.map((sale) => {

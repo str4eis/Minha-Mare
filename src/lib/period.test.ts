@@ -17,14 +17,16 @@ describe("getMonthRange", () => {
     });
   });
 
-  it("includes the final minute of the month and excludes the next month", () => {
-    const items = [
-      { date: "2025-12-01T03:00:00.000Z" },
-      { date: "2026-01-01T02:59:59.999Z" },
-      { date: "2026-01-01T03:00:00.000Z" },
-    ];
+  it("includes 23:59:59 on the last day in Recife", () => {
+    const item = { date: "2026-01-01T02:59:59.000Z" };
 
-    expect(filterByMonth(items, 2025, 12)).toEqual(items.slice(0, 2));
+    expect(filterByMonth([item], 2025, 12)).toEqual([item]);
+  });
+
+  it("excludes midnight on the first day of the next month", () => {
+    const item = { date: "2026-01-01T03:00:00.000Z" };
+
+    expect(filterByMonth([item], 2025, 12)).toEqual([]);
   });
 
   it("rejects invalid months", () => {
@@ -35,6 +37,14 @@ describe("getMonthRange", () => {
 describe("filterByMonth", () => {
   it("returns an empty list when there are no matching items", () => {
     expect(filterByMonth([{ date: "2025-11-30T12:00:00.000Z" }], 2025, 12)).toEqual([]);
+  });
+
+  it("ignores invalid dates without throwing", () => {
+    const valid = { date: "2025-12-15T12:00:00.000Z" };
+    const invalid = { date: "not-a-date" };
+
+    expect(() => filterByMonth([valid, invalid], 2025, 12)).not.toThrow();
+    expect(filterByMonth([valid, invalid], 2025, 12)).toEqual([valid]);
   });
 });
 

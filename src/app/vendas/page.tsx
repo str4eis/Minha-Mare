@@ -8,6 +8,7 @@ import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { saleCategoryMeta } from "@/lib/categories";
+import { filterByMonth } from "@/lib/period";
 
 export default function VendasPage() {
   const { state, totals, selectedMonth, hydrated } = useStore();
@@ -15,9 +16,11 @@ export default function VendasPage() {
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
 
-  const sortedSales = [...state.sales].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sortedSales = filterByMonth(
+    state.sales,
+    selectedMonth.year,
+    selectedMonth.month
+  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
@@ -43,7 +46,7 @@ export default function VendasPage() {
         <ul className="mt-5 divide-y divide-black/5">
           {hydrated && sortedSales.length === 0 && (
             <li className="py-6 text-center text-sm text-mare-slate">
-              Você ainda não registrou nenhuma venda.
+              Nenhuma venda em {monthLabel}.
             </li>
           )}
           {hydrated && sortedSales.map((sale) => {

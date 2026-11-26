@@ -38,11 +38,11 @@ function GastosContent() {
 
   const recent = useMemo(
     () =>
-      state.expenses
+      filterByMonth(state.expenses, selectedMonth.year, selectedMonth.month)
         .filter((e) => e.kind === tab)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 8),
-    [state.expenses, tab]
+    [state.expenses, selectedMonth, tab]
   );
 
   return (
@@ -124,7 +124,9 @@ function GastosContent() {
         </div>
         <ul className="mt-2 divide-y divide-black/5">
           {hydrated && recent.length === 0 && (
-            <li className="py-4 text-sm text-mare-slate">Nenhum gasto lançado ainda.</li>
+            <li className="py-4 text-sm text-mare-slate">
+              Nenhum gasto em {monthLabel}.
+            </li>
           )}
           {hydrated && recent.map((e) => {
             const m = meta[e.category as keyof typeof meta];
