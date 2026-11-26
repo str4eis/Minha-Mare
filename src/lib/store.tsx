@@ -8,90 +8,24 @@ import React, {
   useState,
 } from "react";
 import { AppState, Expense, Sale } from "./types";
-
-const STORAGE_KEY = "minha-mare:v1";
-
-function daysAgoISO(days: number, hour: number, minute: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  d.setHours(hour, minute, 0, 0);
-  return d.toISOString();
-}
-
-function seedState(): AppState {
-  const sales: Sale[] = [
-    {
-      id: "s1",
-      category: "peixe",
-      buyer: "Restaurante do Mar",
-      quantity: 4,
-      unit: "kg",
-      value: 120,
-      date: daysAgoISO(0, 8, 30),
-    },
-    {
-      id: "s2",
-      category: "ostra",
-      buyer: "Feira do Porto",
-      quantity: 8,
-      unit: "dz",
-      value: 380,
-      date: daysAgoISO(1, 15, 10),
-    },
-    {
-      id: "s3",
-      category: "marisco",
-      buyer: "Dona Rita",
-      quantity: 6,
-      unit: "kg",
-      value: 250,
-      date: daysAgoISO(3, 9, 45),
-    },
-    {
-      id: "s4",
-      category: "caranguejo",
-      buyer: "Sabor do Mar",
-      quantity: 10,
-      unit: "dz",
-      value: 600,
-      date: daysAgoISO(5, 17, 0),
-    },
-    {
-      id: "s5",
-      category: "sururu",
-      buyer: "Cliente direto",
-      quantity: 20,
-      unit: "kg",
-      value: 1100,
-      date: daysAgoISO(8, 7, 20),
-    },
-  ];
-
-  const expenses: Expense[] = [
-    { id: "e1", kind: "pesca", category: "combustivel", description: "Gasolina do barco", value: 250, date: daysAgoISO(1, 7, 0) },
-    { id: "e2", kind: "pesca", category: "transporte", description: "Frete até a feira", value: 120, date: daysAgoISO(2, 10, 0) },
-    { id: "e3", kind: "pesca", category: "gelo", description: "Gelo para conservação", value: 90, date: daysAgoISO(3, 6, 30) },
-    { id: "e4", kind: "pesca", category: "equipamentos", description: "Rede nova", value: 260, date: daysAgoISO(6, 14, 0) },
-    { id: "e5", kind: "pesca", category: "manutencao", description: "Conserto do motor", value: 60, date: daysAgoISO(9, 11, 0) },
-    { id: "e6", kind: "pesca", category: "iscas", description: "Iscas para caranguejo", value: 40, date: daysAgoISO(4, 8, 0) },
-    { id: "e7", kind: "casa", category: "alimentacao", description: "Feira da semana", value: 250, date: daysAgoISO(2, 18, 0) },
-    { id: "e8", kind: "casa", category: "moradia", description: "Conta de luz", value: 150, date: daysAgoISO(5, 19, 0) },
-    { id: "e9", kind: "casa", category: "saude", description: "Farmácia", value: 50, date: daysAgoISO(7, 16, 0) },
-  ];
-
-  return {
-    userName: "Maria da Maré",
-    onboarded: false,
-    sales,
-    expenses,
-    metaAposentadoria: 500,
-    poupancaAposentadoria: 225,
-  };
-}
+import {
+  computeTotals,
+  filterByMonth,
+  getCurrentMonth,
+  SelectedMonth,
+} from "./period";
+import {
+  backupCorruptedStoredState,
+  createEmptyAppState,
+  migrateStoredState,
+  STORAGE_KEY,
+} from "./storage";
 
 interface StoreContextValue {
   state: AppState;
   hydrated: boolean;
+  selectedMonth: SelectedMonth;
+  changeMonth: (offset: -1 | 1) => void;
   addSale: (sale: Omit<Sale, "id" | "date">) => void;
   addExpense: (expense: Omit<Expense, "id" | "date">) => void;
   finishOnboarding: () => void;
@@ -107,26 +41,65 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(seedState);
+  const [state, setState] = useState<AppState>(createEmptyAppState);
+  const [selectedMonth, setSelectedMonth] = useState<SelectedMonth>(getCurrentMonth);
   const [hydrated, setHydrated] = useState(false);
+  const [canPersist, setCanPersist] = useState(true);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setState(JSON.parse(raw) as AppState);
+      const migration = migrateStoredState(raw);
+      setState(migration.state);
+      setCanPersist(migration.ok);
+
+      if (!migration.ok) {
+        try {
+          backupCorruptedStoredState(raw, window.localStorage);
+        } catch (error) {
+          console.error("Não foi possível preservar o backup dos dados locais.", error);
+        }
       }
-    } catch {
-      // ignore corrupted storage
+    } catch (error) {
+      setCanPersist(false);
+      console.error("Não foi possível ler os dados locais.", error);
     } finally {
       setHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state, hydrated]);
+    if (!hydrated || !canPersist) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error("Não foi possível salvar os dados locais.", error);
+    }
+  }, [state, hydrated, canPersist]);
+
+  const changeMonth = (offset: -1 | 1) => {
+    setSelectedMonth((previous) => {
+      const candidate =
+        offset === -1
+          ? previous.month === 1
+            ? { year: previous.year - 1, month: 12 }
+            : { year: previous.year, month: previous.month - 1 }
+          : previous.month === 12
+            ? { year: previous.year + 1, month: 1 }
+            : { year: previous.year, month: previous.month + 1 };
+      const current = getCurrentMonth();
+
+      if (
+        candidate.year < 1 ||
+        candidate.year > current.year ||
+        (candidate.year === current.year && candidate.month > current.month)
+      ) {
+        return previous;
+      }
+
+      return candidate;
+    });
+  };
 
   const addSale = (sale: Omit<Sale, "id" | "date">) => {
     const newSale: Sale = {
@@ -135,6 +108,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       date: new Date().toISOString(),
     };
     setState((prev) => ({ ...prev, sales: [newSale, ...prev.sales] }));
+    setCanPersist(true);
   };
 
   const addExpense = (expense: Omit<Expense, "id" | "date">) => {
@@ -144,6 +118,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       date: new Date().toISOString(),
     };
     setState((prev) => ({ ...prev, expenses: [newExpense, ...prev.expenses] }));
+    setCanPersist(true);
   };
 
   const finishOnboarding = () => {
@@ -151,21 +126,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const totals = useMemo(() => {
-    const totalVendido = state.sales.reduce((acc, s) => acc + s.value, 0);
-    const totalGastosPesca = state.expenses
-      .filter((e) => e.kind === "pesca")
-      .reduce((acc, e) => acc + e.value, 0);
-    const totalGastosCasa = state.expenses
-      .filter((e) => e.kind === "casa")
-      .reduce((acc, e) => acc + e.value, 0);
-    const totalGastos = totalGastosPesca + totalGastosCasa;
-    const resultado = totalVendido - totalGastos;
-    return { totalVendido, totalGastosPesca, totalGastosCasa, totalGastos, resultado };
-  }, [state.sales, state.expenses]);
+    const sales = filterByMonth(state.sales, selectedMonth.year, selectedMonth.month);
+    const expenses = filterByMonth(
+      state.expenses,
+      selectedMonth.year,
+      selectedMonth.month
+    );
+    return computeTotals(sales, expenses);
+  }, [state.sales, state.expenses, selectedMonth]);
 
   const value: StoreContextValue = {
     state,
     hydrated,
+    selectedMonth,
+    changeMonth,
     addSale,
     addExpense,
     finishOnboarding,

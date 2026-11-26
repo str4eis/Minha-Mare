@@ -4,20 +4,28 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
-import { formatBRL, formatDateShort } from "@/lib/format";
+import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { saleCategoryMeta } from "@/lib/categories";
+import { filterByMonth } from "@/lib/period";
 
 export default function VendasPage() {
-  const { state, totals } = useStore();
+  const { state, totals, selectedMonth, hydrated } = useStore();
+  const monthLabel = hydrated
+    ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
+    : "—";
 
-  const sortedSales = [...state.sales].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sortedSales = filterByMonth(
+    state.sales,
+    selectedMonth.year,
+    selectedMonth.month
+  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
       <Header />
+      <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
         <h1 className="text-2xl font-semibold">Vendas</h1>
@@ -25,8 +33,10 @@ export default function VendasPage() {
 
         <div className="mt-4 rounded-xl2 bg-mare-purple text-white p-5 shadow-soft flex items-center justify-between">
           <div>
-            <p className="text-sm text-white/75">Total vendido no mês</p>
-            <p className="text-2xl font-semibold mt-1">{formatBRL(totals.totalVendido)}</p>
+            <p className="text-sm text-white/75">Total vendido em {monthLabel}</p>
+            <p className="text-2xl font-semibold mt-1">
+              {hydrated ? formatBRL(totals.totalVendido) : "—"}
+            </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
             <Plus className="h-5 w-5" />
@@ -34,12 +44,12 @@ export default function VendasPage() {
         </div>
 
         <ul className="mt-5 divide-y divide-black/5">
-          {sortedSales.length === 0 && (
+          {hydrated && sortedSales.length === 0 && (
             <li className="py-6 text-center text-sm text-mare-slate">
-              Você ainda não registrou nenhuma venda.
+              Nenhuma venda em {monthLabel}.
             </li>
           )}
-          {sortedSales.map((sale) => {
+          {hydrated && sortedSales.map((sale) => {
             const meta = saleCategoryMeta[sale.category];
             const Icon = meta.icon;
             return (

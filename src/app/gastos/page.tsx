@@ -6,41 +6,49 @@ import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
-import { formatBRL, formatDateShort } from "@/lib/format";
+import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
 import { ExpenseKind } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { filterByMonth } from "@/lib/period";
 
 function GastosContent() {
   const params = useSearchParams();
   const initialTab = (params.get("tab") as ExpenseKind) || "pesca";
   const [tab, setTab] = useState<ExpenseKind>(initialTab);
-  const { state, totals } = useStore();
+  const { state, totals, selectedMonth, hydrated } = useStore();
 
   const meta = tab === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
   const total = tab === "pesca" ? totals.totalGastosPesca : totals.totalGastosCasa;
+  const monthLabel = hydrated
+    ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
+    : "—";
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
-    state.expenses
+    filterByMonth(state.expenses, selectedMonth.year, selectedMonth.month)
       .filter((e) => e.kind === tab)
-      .forEach((e) => map.set(e.category, (map.get(e.category) ?? 0) + e.value));
+      .forEach((e) =>
+        map.set(e.category, (map.get(e.category) ?? 0) + Math.round(e.value * 100))
+      );
     return map;
-  }, [state.expenses, tab]);
+  }, [state.expenses, selectedMonth, tab]);
 
   const recent = useMemo(
     () =>
-      state.expenses
+      filterByMonth(state.expenses, selectedMonth.year, selectedMonth.month)
         .filter((e) => e.kind === tab)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 8),
-    [state.expenses, tab]
+    [state.expenses, selectedMonth, tab]
   );
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
       <Header />
+      <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
         <h1 className="text-2xl font-semibold">Gastos</h1>
@@ -73,7 +81,7 @@ function GastosContent() {
           )}
         >
           <p className="text-xs font-semibold tracking-widest uppercase text-mare-slate">
-            Total {tab === "pesca" ? "com a pesca" : "com a casa"} no mês
+            Total {tab === "pesca" ? "com a pesca" : "com a casa"} em {monthLabel}
           </p>
           <p
             className={cn(
@@ -81,7 +89,7 @@ function GastosContent() {
               tab === "pesca" ? "text-mare-tealDark" : "text-mare-yellowDark"
             )}
           >
-            {formatBRL(total)}
+            {hydrated ? formatBRL(total) : "—"}
           </p>
         </div>
 
@@ -92,7 +100,7 @@ function GastosContent() {
           {(Object.keys(meta) as Array<keyof typeof meta>).map((cat) => {
             const m = meta[cat];
             const Icon = m.icon;
-            const spent = byCategory.get(cat as string) ?? 0;
+            const spent = (byCategory.get(cat as string) ?? 0) / 100;
             return (
               <Link
                 key={cat as string}
@@ -103,7 +111,7 @@ function GastosContent() {
                 <div>
                   <p className="font-semibold text-mare-ink text-sm">{m.label}</p>
                   <p className="text-xs text-mare-slate mt-0.5">
-                    {spent > 0 ? formatBRL(spent) : "Adicionar"}
+                    {!hydrated ? "—" : spent > 0 ? formatBRL(spent) : "Adicionar"}
                   </p>
                 </div>
               </Link>
@@ -115,10 +123,12 @@ function GastosContent() {
           <p className="font-semibold text-mare-ink">Lançamentos recentes</p>
         </div>
         <ul className="mt-2 divide-y divide-black/5">
-          {recent.length === 0 && (
-            <li className="py-4 text-sm text-mare-slate">Nenhum gasto lançado ainda.</li>
+          {hydrated && recent.length === 0 && (
+            <li className="py-4 text-sm text-mare-slate">
+              Nenhum gasto em {monthLabel}.
+            </li>
           )}
-          {recent.map((e) => {
+          {hydrated && recent.map((e) => {
             const m = meta[e.category as keyof typeof meta];
             const Icon = m?.icon;
             return (
