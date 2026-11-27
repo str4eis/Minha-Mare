@@ -9,10 +9,17 @@ import DataStatus from "@/components/DataStatus";
 import { useStore } from "@/lib/store";
 import { formatBRL, currentMonthLabel } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { exportMonthlyExcel } from "@/lib/export-excel";
+import { exportMonthlyPdf } from "@/lib/export-pdf";
+import { createWhatsAppSummary } from "@/lib/whatsapp";
 
 export default function ResultadosPage() {
-  const { totals, selectedMonth, hydrated, ready } = useStore();
-  const [toast, setToast] = useState<string | null>(null);
+  const { state, totals, selectedMonth, hydrated, ready } = useStore();
+  const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
+  const [exportMessage, setExportMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const monthLabel = hydrated
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
@@ -24,20 +31,46 @@ export default function ResultadosPage() {
 
   const positivo = totals.resultado >= 0;
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2200);
-  };
-
-  const shareText = hydrated
-    ? encodeURIComponent(
-        `Resultado de ${monthLabel} — Minha Maré\n` +
-          `Total vendido: ${formatBRL(totals.totalVendido)}\n` +
-          `Gastos da pesca: ${formatBRL(totals.totalGastosPesca)}\n` +
-          `Gastos da casa: ${formatBRL(totals.totalGastosCasa)}\n` +
-          `Resultado final: ${formatBRL(totals.resultado)}`
+  const shareText = ready
+    ? createWhatsAppSummary(
+        selectedMonth.year,
+        selectedMonth.month,
+        totals
       )
     : "";
+
+  async function handleExport(kind: "pdf" | "excel") {
+    if (!ready || exporting) return;
+    setExporting(kind);
+    setExportMessage(null);
+    try {
+      if (kind === "pdf") {
+        await exportMonthlyPdf(
+          state.sales,
+          state.expenses,
+          totals,
+          selectedMonth.year,
+          selectedMonth.month
+        );
+      } else {
+        await exportMonthlyExcel(
+          state.sales,
+          state.expenses,
+          totals,
+          selectedMonth.year,
+          selectedMonth.month
+        );
+      }
+      setExportMessage({ type: "success", text: "Arquivo gerado" });
+    } catch {
+      setExportMessage({
+        type: "error",
+        text: "Não foi possível gerar o arquivo. Tente novamente.",
+      });
+    } finally {
+      setExporting(null);
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
@@ -158,26 +191,50 @@ export default function ResultadosPage() {
 
         <div className="mt-5 grid grid-cols-2 gap-3">
           <button
-            onClick={() => showToast("Exportação em PDF chegando em breve.")}
-            className="rounded-full border border-black/10 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-mare-ink"
+            type="button"
+            onClick={() => handleExport("pdf")}
+            disabled={!ready || exporting !== null}
+            aria-busy={exporting === "pdf"}
+            className="rounded-full border border-black/10 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-mare-ink disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FileDown className="h-4 w-4" />
-            Exportar PDF
+            {exporting === "pdf" ? "Gerando PDF..." : "Exportar PDF"}
           </button>
           <button
-            onClick={() => showToast("Exportação em Excel chegando em breve.")}
-            className="rounded-full border border-black/10 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-mare-ink"
+            type="button"
+            onClick={() => handleExport("excel")}
+            disabled={!ready || exporting !== null}
+            aria-busy={exporting === "excel"}
+            className="rounded-full border border-black/10 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-mare-ink disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Sheet className="h-4 w-4" />
-            Exportar Excel
+            {exporting === "excel" ? "Gerando Excel..." : "Exportar Excel"}
           </button>
         </div>
 
+        {exportMessage && (
+          <p
+            className={`mt-3 rounded-lg px-3 py-2 text-center text-sm ${
+              exportMessage.type === "success"
+                ? "bg-mare-tealLight text-mare-tealDark"
+                : "bg-[#F3C9D3] text-[#B23B5C]"
+            }`}
+            role={exportMessage.type === "success" ? "status" : "alert"}
+          >
+            {exportMessage.text}
+          </p>
+        )}
+
         <a
-        href={ready ? `https://wa.me/?text=${shareText}` : undefined}
-        aria-disabled={!ready}
+          href={
+            ready
+              ? `https://wa.me/?text=${encodeURIComponent(shareText)}`
+              : undefined
+          }
+          aria-disabled={!ready}
           target="_blank"
           rel="noopener noreferrer"
+          tabIndex={ready ? undefined : -1}
           className={`mt-3 w-full flex items-center justify-center gap-2 rounded-full bg-mare-tealDark text-white py-3.5 font-semibold shadow-soft ${
             ready ? "" : "pointer-events-none opacity-50"
           }`}
@@ -185,12 +242,6 @@ export default function ResultadosPage() {
           <Share2 className="h-4 w-4" />
           Compartilhar no WhatsApp
         </a>
-
-        {toast && (
-          <div className="mt-3 rounded-lg bg-mare-ink text-white text-sm text-center py-2 px-3">
-            {toast}
-          </div>
-        )}
       </main>
 
       <BottomNav />

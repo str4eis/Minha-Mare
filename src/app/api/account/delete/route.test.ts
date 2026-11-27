@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   deleteUser: vi.fn(),
+  createAdminClient: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -12,26 +13,14 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: vi.fn(() => ({
-    auth: { admin: { deleteUser: mocks.deleteUser } },
-  })),
+  createAdminClient: mocks.createAdminClient,
 }));
 
 import { POST } from "./route";
 
-const originalServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
 describe("POST /api/account/delete", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    if (originalServiceRoleKey === undefined) {
-      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-    } else {
-      process.env.SUPABASE_SERVICE_ROLE_KEY = originalServiceRoleKey;
-    }
   });
 
   it("returns 401 when there is no authenticated user", async () => {
@@ -46,8 +35,8 @@ describe("POST /api/account/delete", () => {
     expect(mocks.deleteUser).not.toHaveBeenCalled();
   });
 
-  it("returns a generic 500 when the service role key is missing", async () => {
-    process.env.SUPABASE_SERVICE_ROLE_KEY = "";
+  it("returns a generic 500 when the server admin client is unavailable", async () => {
+    mocks.createAdminClient.mockReturnValue(null);
     mocks.getUser.mockResolvedValue({
       data: { user: { id: "user-1" } },
       error: null,

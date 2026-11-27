@@ -23,10 +23,6 @@ export async function POST() {
     return NextResponse.json(genericError, { status: 500 });
   }
 
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json(genericError, { status: 500 });
-  }
-
   try {
     const admin = createAdminClient();
     if (!admin) return NextResponse.json(genericError, { status: 500 });
