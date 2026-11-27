@@ -9,13 +9,19 @@ describe("auth route helpers", () => {
     expect(safeNextPath("/\\evil.com")).toBeNull();
     expect(safeNextPath("")).toBeNull();
     expect(safeNextPath(null)).toBeNull();
+    expect(safeNextPath(undefined)).toBeNull();
   });
 
   it("identifies protected and authentication routes", () => {
     expect(isProtectedPath("/home")).toBe(true);
     expect(isProtectedPath("/vendas/novo")).toBe(true);
+    expect(isProtectedPath("/perfil")).toBe(true);
+    expect(isProtectedPath("/perfil/editar")).toBe(true);
     expect(isProtectedPath("/login")).toBe(false);
-    expect(isAuthPath("/recuperar-senha")).toBe(true);
+    expect(isAuthPath("/login")).toBe(true);
+    expect(isAuthPath("/cadastro")).toBe(true);
+    expect(isAuthPath("/recuperar-senha")).toBe(false);
     expect(isAuthPath("/redefinir-senha")).toBe(false);
+    expect(isAuthPath("/auth/callback")).toBe(false);
   });
 });

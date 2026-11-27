@@ -1,11 +1,11 @@
 export function isProtectedPath(pathname: string): boolean {
-  return ["/home", "/vendas", "/gastos", "/resultados"].some(
+  return ["/home", "/vendas", "/gastos", "/resultados", "/perfil"].some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
 }
 
 export function isAuthPath(pathname: string): boolean {
-  return ["/login", "/cadastro", "/recuperar-senha"].includes(pathname);
+  return ["/login", "/cadastro"].includes(pathname);
 }
 
 export function safeNextPath(value: string | null | undefined): string | null {

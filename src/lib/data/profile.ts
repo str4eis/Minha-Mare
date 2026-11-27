@@ -12,6 +12,13 @@ export async function getProfile(client: Client, userId: string) {
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) throw new Error("Perfil da usuária não encontrado.");
+  if (!data) {
+    return {
+      id: userId,
+      full_name: "",
+      retirement_goal: 0,
+      retirement_saved: 0,
+    };
+  }
   return mapProfileRow(data);
 }
