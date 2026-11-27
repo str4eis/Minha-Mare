@@ -10,10 +10,13 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import DataStatus from "@/components/ui/DataStatus";
+import InstallAppBanner from "@/components/ui/InstallAppBanner";
+import SpeakButton from "@/components/audio/SpeakButton";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
 import { saleCategoryMeta } from "@/lib/domain/categories";
+import { moneyInWords } from "@/lib/domain/money-words";
 
 export default function HomePage() {
   const { state, totals, selectedMonth, hydrated, ready } = useStore();
@@ -24,6 +27,12 @@ export default function HomePage() {
     .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
     .slice(0, 3);
   const sobrouPositivo = totals.resultado >= 0;
+  const saldoFalado = sobrouPositivo
+    ? `sobrou ${moneyInWords(totals.resultado)}`
+    : `o saldo ficou negativo em ${moneyInWords(Math.abs(totals.resultado))}`;
+  const summarySpeech = `Em ${monthLabel}, entrou ${moneyInWords(
+    totals.totalVendido
+  )}, saiu ${moneyInWords(totals.totalGastos)} e ${saldoFalado}.`;
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -82,6 +91,11 @@ export default function HomePage() {
               </dd>
             </div>
           </dl>
+          {ready && (
+            <div className="mt-4">
+              <SpeakButton text={summarySpeech} label="Ouvir resumo" />
+            </div>
+          )}
         </section>
 
         <section className="mt-4 grid grid-cols-1 gap-3">
@@ -100,6 +114,8 @@ export default function HomePage() {
             Anotar gasto
           </Link>
         </section>
+
+        <InstallAppBanner compact />
 
         {ready && totals.totalVendido === 0 && (
           <Link

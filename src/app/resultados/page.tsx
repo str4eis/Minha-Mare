@@ -12,9 +12,11 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import DataStatus from "@/components/ui/DataStatus";
+import SpeakButton from "@/components/audio/SpeakButton";
 import { useStore } from "@/lib/store";
 import { formatBRL, currentMonthLabel } from "@/lib/domain/format";
 import { cn } from "@/lib/utils/cn";
+import { moneyInWords } from "@/lib/domain/money-words";
 
 export default function ResultadosPage() {
   const { totals, selectedMonth, hydrated, ready } = useStore();
@@ -30,6 +32,12 @@ export default function ResultadosPage() {
       : sobrouPositivo
         ? `Depois dos gastos, sobraram ${formatBRL(totals.resultado)} neste mês.`
         : "Os gastos passaram do que entrou. Você pode ver os lançamentos em Mais.";
+  const saldoFalado = sobrouPositivo
+    ? `sobrou ${moneyInWords(totals.resultado)}`
+    : `o saldo ficou negativo em ${moneyInWords(Math.abs(totals.resultado))}`;
+  const summarySpeech = `Em ${monthLabel}, entrou ${moneyInWords(
+    totals.totalVendido
+  )}, saiu ${moneyInWords(totals.totalGastos)} e ${saldoFalado}.`;
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -82,6 +90,11 @@ export default function ResultadosPage() {
             </p>
           </div>
         </section>
+        {ready && (
+          <div className="mt-4">
+            <SpeakButton text={summarySpeech} label="Ouvir resumo" />
+          </div>
+        )}
 
         <section className="mt-4 rounded-xl2 border border-black/10 p-4">
           <h2 className="text-lg font-semibold text-mare-institutional">

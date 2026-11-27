@@ -8,6 +8,7 @@ import CategoryIcon from "@/components/forms/CategoryIcon";
 import DataStatus from "@/components/ui/DataStatus";
 import Header from "@/components/layout/Header";
 import MoneyInput from "@/components/ui/MoneyInput";
+import SpeakButton from "@/components/audio/SpeakButton";
 import { useStore } from "@/lib/store";
 import { saleCategoryMeta } from "@/lib/domain/categories";
 import { cn } from "@/lib/utils/cn";
@@ -370,6 +371,18 @@ export default function SaleForm({ sale }: SaleFormProps) {
             <p className="mt-2 text-lg text-mare-slate">
               {moneyInWords(parsedValue)}
             </p>
+          )}
+          {category && numericValue !== null && (
+            <div className="mt-3">
+              <SpeakButton
+                label="Ouvir valor"
+                text={`Produto: ${saleCategoryMeta[
+                  category
+                ].label}. Valor total: ${moneyInWords(
+                  numericValue
+                )}.`}
+              />
+            </div>
           )}
           {priceSuggestion && category === priceSuggestion.category && (
             <p className="mt-2 text-lg text-mare-slate" role="status">

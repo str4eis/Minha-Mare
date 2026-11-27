@@ -8,6 +8,7 @@ import CategoryIcon from "@/components/forms/CategoryIcon";
 import DataStatus from "@/components/ui/DataStatus";
 import Header from "@/components/layout/Header";
 import MoneyInput from "@/components/ui/MoneyInput";
+import SpeakButton from "@/components/audio/SpeakButton";
 import { useStore } from "@/lib/store";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/domain/categories";
 import {
@@ -201,6 +202,18 @@ export default function ExpenseForm({
             <p className="mt-2 text-lg text-mare-slate">
               {moneyInWords(parsedValue)}
             </p>
+          )}
+          {numericValue !== null && (
+            <div className="mt-3">
+              <SpeakButton
+                label="Ouvir valor"
+                text={`Categoria: ${meta[
+                  category as keyof typeof meta
+                ].label}. Valor total: ${moneyInWords(
+                  numericValue
+                )}.`}
+              />
+            </div>
           )}
         </div>
 

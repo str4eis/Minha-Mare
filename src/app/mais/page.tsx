@@ -14,6 +14,7 @@ import {
 import BottomNav from "@/components/layout/BottomNav";
 import DataStatus from "@/components/ui/DataStatus";
 import Header from "@/components/layout/Header";
+import InstallAppBanner from "@/components/ui/InstallAppBanner";
 import MonthPicker from "@/components/layout/MonthPicker";
 import { useStore } from "@/lib/store";
 import { formatBRL, currentMonthLabel } from "@/lib/domain/format";
@@ -102,6 +103,7 @@ export default function MaisPage() {
         <p className="mt-1 text-lg text-mare-slate">
           Histórico, relatórios e sua conta.
         </p>
+        <InstallAppBanner />
 
         <section className="mt-5">
           <h2 className="text-xl font-semibold text-mare-institutional">
