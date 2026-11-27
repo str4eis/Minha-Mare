@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import LegalLinks from "@/components/LegalLinks";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 export default function WelcomePage() {
   return (
@@ -26,17 +27,12 @@ export default function WelcomePage() {
               Controle suas vendas e gastos da maré, do seu jeito.
             </p>
             <div className="mt-5 grid gap-3">
+              <GoogleSignInButton nextPath="/home" />
               <Link
-                href="/cadastro"
-                className="flex min-h-12 w-full items-center justify-center rounded-full bg-mare-primary px-4 text-base font-semibold text-white shadow-soft transition-transform active:scale-[0.99]"
+                href="/login?modo=email"
+                className="flex min-h-12 w-full items-center justify-center px-4 text-lg font-medium text-mare-primary underline underline-offset-4"
               >
-                Criar conta
-              </Link>
-              <Link
-                href="/login"
-                className="flex min-h-12 w-full items-center justify-center rounded-full border-2 border-mare-primary px-4 text-base font-semibold text-mare-primary transition-colors hover:bg-mare-purpleLight"
-              >
-                Entrar
+                Entrar com e-mail e senha
               </Link>
             </div>
           </div>

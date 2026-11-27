@@ -1,17 +1,19 @@
 # Minha Maré
 
 Aplicativo web de controle financeiro para marisqueiras, feito em **Next.js 15.5**,
-**React 18**, **TypeScript** e **Tailwind CSS**. O acesso é feito com e-mail e senha;
-vendas, gastos e perfil são armazenados no Supabase, vinculados à usuária autenticada.
+**React 18**, **TypeScript** e **Tailwind CSS**. O Google é a opção principal de
+entrada, com e-mail e senha como alternativa. Vendas, gastos e perfil são armazenados
+no Supabase, vinculados à usuária autenticada.
 
 ## Telas
 
-- **/** — Boas-vindas, cadastro ou acesso à conta
+- **/** — Boas-vindas e entrada com Google
 - **/home** — Resumo do mês e lançamentos recentes
 - **/perfil** — Dados pessoais, meta de aposentadoria, saída e exclusão da conta
 - **/vendas** e **/gastos** — Histórico mensal, filtros, edição e exclusão
 - **/resultados** — Totais, exportação em Excel/PDF e compartilhamento do mês no WhatsApp
-- **/login**, **/cadastro**, **/recuperar-senha** e **/redefinir-senha** — Autenticação
+- **/login**, **/cadastro**, **/recuperar-senha** e **/redefinir-senha** — Google,
+  e-mail e senha
 
 As rotas `/home`, `/vendas`, `/gastos`, `/resultados` e `/perfil` são protegidas pelo
 middleware, que valida a sessão no servidor. As telas de autenticação são
@@ -49,6 +51,30 @@ middleware, que valida a sessão no servidor. As telas de autenticação são
    ```
 
    Acesse http://localhost:3000.
+
+## Login com Google
+
+1. No Google Cloud Console, crie um cliente OAuth do tipo **Aplicativo da Web**.
+   Em **Origens JavaScript autorizadas**, inclua:
+   - `http://localhost:3000`
+   - `https://minha-mare.vercel.app`
+   - Os domínios de preview que você realmente usar, se houver.
+2. No Supabase, abra **Authentication → Providers → Google**, ative o provedor e
+   informe o ID e o segredo do cliente OAuth. O segredo fica somente no Supabase;
+   não o coloque no código, no README ou nas variáveis públicas da Vercel.
+3. No Google Cloud Console, use como URI de redirecionamento autorizada a URL de
+   callback mostrada pelo Supabase. Ela segue este formato:
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+4. No Supabase, em **Authentication → URL Configuration**, defina o endereço de
+   produção como **Site URL** e permita os retornos do app:
+   - `http://localhost:3000/auth/callback`
+   - `https://minha-mare.vercel.app/auth/callback`
+   - O callback dos domínios de preview, se forem usados.
+5. Publique o app na Vercel e teste a entrada no domínio publicado. O app envia a
+   usuária para `/auth/callback`; o Supabase valida o código e devolve a sessão.
+
+O botão Google é o caminho principal. O formulário de e-mail e senha continua
+disponível em **Entrar com e-mail e senha**.
 
 > **Segredo:** `SUPABASE_SERVICE_ROLE_KEY` é somente para servidor. Nunca use o
 > prefixo `NEXT_PUBLIC_` nessa variável, nunca a importe em componentes client e

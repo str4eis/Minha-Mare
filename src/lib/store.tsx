@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { AppState, Expense, Sale } from "./types";
 import { computeTotals, getCurrentMonth, SelectedMonth } from "./period";
 import { createClient } from "./supabase/client";
@@ -28,6 +28,7 @@ import {
 import { getProfile, upsertProfile } from "./data/profile";
 import { ExpenseUpdate, SaleUpdate } from "./state";
 import type { Database } from "./supabase/database.types";
+import { getProfileDisplayName } from "./profile-name";
 
 interface StoreContextValue {
   state: AppState;
@@ -94,6 +95,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
+  const [authDisplayName, setAuthDisplayName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [configurationError, setConfigurationError] = useState(false);
@@ -106,10 +108,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return clientRef.current;
   }, []);
 
-  const acceptUser = useCallback((user: {
-    id: string;
-    email?: string;
-  } | null) => {
+  const acceptUser = useCallback((user: User | null) => {
     const nextUserId = user?.id ?? null;
     if (activeUserId.current !== nextUserId) {
       activeUserId.current = nextUserId;
@@ -119,6 +118,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     setUserId(nextUserId);
     setUserEmail(user?.email ?? "");
+    setAuthDisplayName(
+      getProfileDisplayName("", user?.user_metadata, user?.email)
+    );
   }, []);
 
   useEffect(() => {
@@ -206,7 +208,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       .then(([profile, sales, expenses]) => {
         if (!active || currentRequest !== requestId.current) return;
         setState({
-          userName: profile.full_name,
+          userName: profile.full_name.trim() || authDisplayName,
           onboarded: true,
           sales,
           expenses,
@@ -228,6 +230,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, [
     authChecked,
+    authDisplayName,
     configurationError,
     dataRefreshCount,
     getClient,
@@ -398,6 +401,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     activeUserId.current = null;
     setUserId(null);
     setUserEmail("");
+    setAuthDisplayName("");
     setState(emptyState());
     setError(null);
     setHydrated(false);
