@@ -13,12 +13,11 @@ import { filterByMonth } from "@/lib/period";
 export default function HomePage() {
   const { state, totals, selectedMonth, hydrated } = useStore();
 
+  const totalActivity = totals.totalVendido + totals.totalGastos;
   const vendasShare =
-    !hydrated || totals.totalVendido + totals.totalGastos === 0
-      ? 50
-      : Math.round(
-          (totals.totalVendido / (totals.totalVendido + totals.totalGastos)) * 100
-        );
+    totalActivity > 0
+      ? Math.round((totals.totalVendido / totalActivity) * 100)
+      : 0;
 
   const aposentadoriaPct =
     hydrated && state.metaAposentadoria > 0
@@ -77,7 +76,11 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          <div className="mt-4 h-2 w-full rounded-full bg-[#F3C9D3] overflow-hidden">
+          <div
+            className={`mt-4 h-2 w-full rounded-full overflow-hidden ${
+              totalActivity > 0 ? "bg-[#F3C9D3]" : "bg-[#E5E7EB]"
+            }`}
+          >
             <div
               className="h-full rounded-full bg-mare-tealDark"
               style={{ width: `${vendasShare}%` }}

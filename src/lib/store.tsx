@@ -9,6 +9,16 @@ import React, {
 } from "react";
 import { AppState, Expense, Sale } from "./types";
 import {
+  addExpense as addExpenseToState,
+  addSale as addSaleToState,
+  deleteExpense as deleteExpenseFromState,
+  deleteSale as deleteSaleFromState,
+  ExpenseUpdate,
+  SaleUpdate,
+  updateExpense as updateExpenseInState,
+  updateSale as updateSaleInState,
+} from "./state";
+import {
   computeTotals,
   filterByMonth,
   getCurrentMonth,
@@ -18,6 +28,7 @@ import {
   backupCorruptedStoredState,
   createEmptyAppState,
   migrateStoredState,
+  shouldPersistStoredState,
   STORAGE_KEY,
 } from "./storage";
 
@@ -26,8 +37,12 @@ interface StoreContextValue {
   hydrated: boolean;
   selectedMonth: SelectedMonth;
   changeMonth: (offset: -1 | 1) => void;
-  addSale: (sale: Omit<Sale, "id" | "date">) => void;
-  addExpense: (expense: Omit<Expense, "id" | "date">) => void;
+  addSale: (sale: Omit<Sale, "id">) => void;
+  updateSale: (id: string, sale: SaleUpdate) => void;
+  deleteSale: (id: string) => void;
+  addExpense: (expense: Omit<Expense, "id">) => void;
+  updateExpense: (id: string, expense: ExpenseUpdate) => void;
+  deleteExpense: (id: string) => void;
   finishOnboarding: () => void;
   totals: {
     totalVendido: number;
@@ -44,16 +59,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(createEmptyAppState);
   const [selectedMonth, setSelectedMonth] = useState<SelectedMonth>(getCurrentMonth);
   const [hydrated, setHydrated] = useState(false);
-  const [canPersist, setCanPersist] = useState(true);
+  const [initialReadOk, setInitialReadOk] = useState<boolean | null>(null);
+  const [hasUserChanges, setHasUserChanges] = useState(false);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const migration = migrateStoredState(raw);
       setState(migration.state);
-      setCanPersist(migration.ok);
+      setInitialReadOk(migration.ok);
 
-      if (!migration.ok) {
+      if (!migration.ok || migration.discarded > 0) {
         try {
           backupCorruptedStoredState(raw, window.localStorage);
         } catch (error) {
@@ -61,7 +77,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      setCanPersist(false);
+      setInitialReadOk(false);
       console.error("Não foi possível ler os dados locais.", error);
     } finally {
       setHydrated(true);
@@ -69,13 +85,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!hydrated || !canPersist) return;
+    if (!shouldPersistStoredState(initialReadOk, hasUserChanges)) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (error) {
       console.error("Não foi possível salvar os dados locais.", error);
     }
-  }, [state, hydrated, canPersist]);
+  }, [state, initialReadOk, hasUserChanges]);
 
   const changeMonth = (offset: -1 | 1) => {
     setSelectedMonth((previous) => {
@@ -101,28 +117,67 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const addSale = (sale: Omit<Sale, "id" | "date">) => {
-    const newSale: Sale = {
-      ...sale,
-      id: `s${Date.now()}`,
-      date: new Date().toISOString(),
-    };
-    setState((prev) => ({ ...prev, sales: [newSale, ...prev.sales] }));
-    setCanPersist(true);
+  const addSale = (sale: Omit<Sale, "id">) => {
+    const newSale: Sale = { ...sale, id: crypto.randomUUID() };
+    const nextState = addSaleToState(state, newSale);
+    setState((previous) =>
+      previous === state ? nextState : addSaleToState(previous, newSale)
+    );
+    setSelectedMonth(getCurrentMonth(new Date(sale.date)));
+    setHasUserChanges(true);
   };
 
-  const addExpense = (expense: Omit<Expense, "id" | "date">) => {
-    const newExpense: Expense = {
-      ...expense,
-      id: `e${Date.now()}`,
-      date: new Date().toISOString(),
-    };
-    setState((prev) => ({ ...prev, expenses: [newExpense, ...prev.expenses] }));
-    setCanPersist(true);
+  const updateSale = (id: string, sale: SaleUpdate) => {
+    const nextState = updateSaleInState(state, id, sale);
+    if (nextState === state) return;
+    setState((previous) =>
+      previous === state ? nextState : updateSaleInState(previous, id, sale)
+    );
+    setSelectedMonth(getCurrentMonth(new Date(sale.date)));
+    setHasUserChanges(true);
+  };
+
+  const deleteSale = (id: string) => {
+    const nextState = deleteSaleFromState(state, id);
+    if (nextState === state) return;
+    setState((previous) =>
+      previous === state ? nextState : deleteSaleFromState(previous, id)
+    );
+    setHasUserChanges(true);
+  };
+
+  const addExpense = (expense: Omit<Expense, "id">) => {
+    const newExpense: Expense = { ...expense, id: crypto.randomUUID() };
+    const nextState = addExpenseToState(state, newExpense);
+    setState((previous) =>
+      previous === state ? nextState : addExpenseToState(previous, newExpense)
+    );
+    setSelectedMonth(getCurrentMonth(new Date(expense.date)));
+    setHasUserChanges(true);
+  };
+
+  const updateExpense = (id: string, expense: ExpenseUpdate) => {
+    const nextState = updateExpenseInState(state, id, expense);
+    if (nextState === state) return;
+    setState((previous) =>
+      previous === state ? nextState : updateExpenseInState(previous, id, expense)
+    );
+    setSelectedMonth(getCurrentMonth(new Date(expense.date)));
+    setHasUserChanges(true);
+  };
+
+  const deleteExpense = (id: string) => {
+    const nextState = deleteExpenseFromState(state, id);
+    if (nextState === state) return;
+    setState((previous) =>
+      previous === state ? nextState : deleteExpenseFromState(previous, id)
+    );
+    setHasUserChanges(true);
   };
 
   const finishOnboarding = () => {
     setState((prev) => ({ ...prev, onboarded: true }));
+    setHasUserChanges(true);
   };
 
   const totals = useMemo(() => {
@@ -141,7 +196,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     selectedMonth,
     changeMonth,
     addSale,
+    updateSale,
+    deleteSale,
     addExpense,
+    updateExpense,
+    deleteExpense,
     finishOnboarding,
     totals,
   };

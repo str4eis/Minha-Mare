@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   backupCorruptedStoredState,
   migrateStoredState,
+  shouldPersistStoredState,
   STORAGE_BACKUP_KEY,
   STORAGE_KEY,
 } from "./storage";
@@ -64,6 +65,7 @@ describe("migrateStoredState", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(result.discarded).toBe(0);
     expect(result.state).toMatchObject({
       userName: "",
       metaAposentadoria: 0,
@@ -82,6 +84,7 @@ describe("migrateStoredState", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(result.discarded).toBe(0);
     expect(result.state.sales).toEqual([realSale]);
     expect(result.state.expenses).toEqual([realExpense]);
   });
@@ -98,6 +101,7 @@ describe("migrateStoredState", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(result.discarded).toBe(0);
     expect(result.state).toMatchObject({
       userName: "Joana",
       sales: [realSale],
@@ -107,7 +111,7 @@ describe("migrateStoredState", () => {
     });
   });
 
-  it("rejects invalid JSON and backs it up without changing the primary value", () => {
+  it("backs up invalid JSON without changing the primary value", () => {
     const raw = "{json inválido";
     const values = new Map([[STORAGE_KEY, raw]]);
     const storage = {
@@ -119,9 +123,42 @@ describe("migrateStoredState", () => {
     backupCorruptedStoredState(raw, storage);
 
     expect(result.ok).toBe(false);
+    expect(result.discarded).toBe(0);
     expect(result.state.sales).toEqual([]);
     expect(values.get(STORAGE_KEY)).toBe(raw);
     expect(values.get(STORAGE_BACKUP_KEY)).toBe(raw);
+  });
+
+  it("backs up the original data when invalid transactions are discarded", () => {
+    const raw = storedState({
+      sales: [{ ...realSale, value: "inválido" }],
+    });
+    const values = new Map([[STORAGE_KEY, raw]]);
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+
+    const result = migrateStoredState(raw);
+    if (!result.ok || result.discarded > 0) {
+      backupCorruptedStoredState(raw, storage);
+    }
+
+    expect(result.ok).toBe(true);
+    expect(result.discarded).toBe(1);
+    expect(values.get(STORAGE_KEY)).toBe(raw);
+    expect(values.get(STORAGE_BACKUP_KEY)).toBe(raw);
+  });
+
+  it("does not persist after a failed initial read until the user changes state", () => {
+    expect(shouldPersistStoredState(false, false)).toBe(false);
+    expect(shouldPersistStoredState(false, true)).toBe(true);
+  });
+
+  it("does not rewrite a successful initial read unless the user changes state", () => {
+    expect(shouldPersistStoredState(null, true)).toBe(false);
+    expect(shouldPersistStoredState(true, false)).toBe(false);
+    expect(shouldPersistStoredState(true, true)).toBe(true);
   });
 
   it("does not overwrite an existing backup", () => {
@@ -148,17 +185,20 @@ describe("migrateStoredState", () => {
     const result = migrateStoredState(JSON.stringify(withoutSales));
 
     expect(result.ok).toBe(false);
+    expect(result.discarded).toBe(0);
     expect(result.state.sales).toEqual([]);
     expect(result.state.expenses).toEqual([]);
   });
 
   it("drops an invalid transaction but retains valid transactions", () => {
     const invalidSale = { ...realSale, value: "invalid" };
+    const invalidDateSale = { ...realSale, id: "s-invalid-date", date: "2026-02-30" };
     const result = migrateStoredState(
-      storedState({ sales: [invalidSale, realSale] })
+      storedState({ sales: [invalidSale, invalidDateSale, realSale] })
     );
 
     expect(result.ok).toBe(true);
+    expect(result.discarded).toBe(2);
     expect(result.state.sales).toEqual([realSale]);
   });
 });

@@ -7,15 +7,27 @@ export interface SelectedMonth {
   month: number;
 }
 
-function utcTimestamp(year: number, month: number, day: number): number {
+function utcTimestamp(
+  year: number,
+  month: number,
+  day: number,
+  hour = 0,
+  minute = 0
+): number {
   const date = new Date(0);
-  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCHours(hour, minute, 0, 0);
   date.setUTCFullYear(year, month - 1, day);
   return date.getTime();
 }
 
-function localMidnightAsUtc(year: number, month: number): Date {
-  const utcGuess = utcTimestamp(year, month, 1);
+function localDateTimeAsUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number
+): Date {
+  const utcGuess = utcTimestamp(year, month, day, hour, minute);
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: TIME_ZONE,
     year: "numeric",
@@ -31,14 +43,85 @@ function localMidnightAsUtc(year: number, month: number): Date {
   const representedAsUtc = utcTimestamp(
     Number(values.year),
     Number(values.month),
-    Number(values.day)
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute)
   ) +
-    Number(values.hour) * 60 * 60 * 1000 +
-    Number(values.minute) * 60 * 1000 +
     Number(values.second) * 1000;
   const offset = representedAsUtc - utcGuess;
 
   return new Date(utcGuess - offset);
+}
+
+function localMidnightAsUtc(year: number, month: number): Date {
+  return localDateTimeAsUtc(year, month, 1, 0, 0);
+}
+
+function dateInputInRecife(date: Date): string {
+  if (!Number.isFinite(date.getTime())) {
+    throw new RangeError("A data informada é inválida.");
+  }
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+
+  return `${values.year.padStart(4, "0")}-${values.month}-${values.day}`;
+}
+
+function parseDateInput(value: string): {
+  year: number;
+  month: number;
+  day: number;
+} {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) throw new RangeError("Use uma data válida no formato AAAA-MM-DD.");
+
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const timestamp = utcTimestamp(year, month, day);
+  const check = new Date(timestamp);
+
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    check.getUTCFullYear() !== year ||
+    check.getUTCMonth() !== month - 1 ||
+    check.getUTCDate() !== day
+  ) {
+    throw new RangeError("A data informada não existe.");
+  }
+
+  return { year, month, day };
+}
+
+export function dateInputToISO(yyyyMmDd: string, now = new Date()): string {
+  const selected = parseDateInput(yyyyMmDd);
+  const today = dateInputInRecife(now);
+
+  if (yyyyMmDd > today) {
+    throw new RangeError("A data não pode estar no futuro.");
+  }
+
+  return yyyyMmDd === today
+    ? now.toISOString()
+    : localDateTimeAsUtc(selected.year, selected.month, selected.day, 12, 0).toISOString();
+}
+
+export function isoToDateInput(iso: string): string {
+  const date = new Date(iso);
+  if (!Number.isFinite(date.getTime())) {
+    throw new RangeError("A data informada é inválida.");
+  }
+  return dateInputInRecife(date);
 }
 
 export function getMonthRange(
