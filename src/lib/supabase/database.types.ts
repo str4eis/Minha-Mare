@@ -38,6 +38,7 @@ export interface Database {
           id: string;
           user_id: string;
           category: string;
+          custom_product: string | null;
           buyer: string;
           quantity: number;
           unit: string;
@@ -49,6 +50,7 @@ export interface Database {
           id?: string;
           user_id?: string;
           category: string;
+          custom_product?: string | null;
           buyer?: string;
           quantity: number;
           unit: string;
@@ -60,6 +62,7 @@ export interface Database {
           id?: string;
           user_id?: string;
           category?: string;
+          custom_product?: string | null;
           buyer?: string;
           quantity?: number;
           unit?: string;

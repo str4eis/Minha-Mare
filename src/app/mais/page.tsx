@@ -42,7 +42,12 @@ export default function MaisPage() {
   const categoryOptions =
     expenseKind === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
   const shareText = ready
-    ? createWhatsAppSummary(selectedMonth.year, selectedMonth.month, totals)
+    ? createWhatsAppSummary(
+        selectedMonth.year,
+        selectedMonth.month,
+        totals,
+        state.sales
+      )
     : "";
 
   function searchSales(event: FormEvent<HTMLFormElement>) {

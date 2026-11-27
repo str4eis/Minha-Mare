@@ -63,6 +63,28 @@ function CrabIcon({ size = 24, strokeWidth = 2, ...props }: LucideProps) {
   );
 }
 
+function ShrimpIcon({ size = 24, strokeWidth = 2, ...props }: LucideProps) {
+  return (
+    <svg
+      {...props}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M7 14c2 2 5 3 8 2 3-1 5-4 5-7-2-2-5-3-8-2-3 0-5 2-6 4" />
+      <path d="m9 9 2 5m2-6 1 6m2-5 1 4" />
+      <path d="m7 11-3-4 1 5-4 2 6 2m12-7 3-3m-3 4 4-1" />
+      <path d="m10 16-2 4m5-3-1 4m4-5 1 3" />
+      <circle cx="18" cy="9" r="0.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function SururuIcon({ size = 24, strokeWidth = 2, ...props }: LucideProps) {
   return (
     <svg
@@ -105,6 +127,7 @@ const iconsByName: Record<CategoryIconName, IconComponent> = {
   ostra: OysterIcon,
   caranguejo: CrabIcon,
   peixe: Fish,
+  camarao: ShrimpIcon,
   marisco: Shell,
   sururu: SururuIcon,
   outros: Package,

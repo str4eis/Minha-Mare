@@ -15,10 +15,18 @@ describe("getDefaultSaleUnit", () => {
     ["sururu", "kg", "quilo"],
     ["marisco", "kg", "quilo"],
     ["peixe", "kg", "quilo"],
+    ["camarao", "kg", "quilo"],
     ["outros", "kg", "quilo"],
   ] as const)("uses %s as %s (%s)", (category, unit, label) => {
     expect(getDefaultSaleUnit(category)).toBe(unit);
     expect(formatSaleUnit(getDefaultSaleUnit(category))).toBe(label);
+  });
+
+  it("supports liters and plural unit names", () => {
+    expect(formatSaleUnit("litro")).toBe("litro");
+    expect(formatSaleUnit("litro", 2)).toBe("litros");
+    expect(formatSaleUnit("dz", 2)).toBe("dúzias");
+    expect(formatSaleUnit("kg", 2)).toBe("quilos");
   });
 });
 
@@ -27,6 +35,7 @@ describe("suggestLastSalePrice", () => {
     {
       id: "older-oyster",
       category: "ostra",
+      customProduct: null,
       buyer: "Feira",
       quantity: 2,
       unit: "dz",
@@ -36,6 +45,7 @@ describe("suggestLastSalePrice", () => {
     {
       id: "newer-oyster",
       category: "ostra",
+      customProduct: null,
       buyer: "Restaurante",
       quantity: 4,
       unit: "dz",
@@ -45,6 +55,7 @@ describe("suggestLastSalePrice", () => {
     {
       id: "fish",
       category: "peixe",
+      customProduct: null,
       buyer: "Feira",
       quantity: 1,
       unit: "kg",

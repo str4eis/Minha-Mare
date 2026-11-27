@@ -2,6 +2,7 @@ const categoryIconNames = {
   ostra: "ostra",
   caranguejo: "caranguejo",
   peixe: "peixe",
+  camarao: "camarao",
   marisco: "marisco",
   sururu: "sururu",
   outros: "outros",

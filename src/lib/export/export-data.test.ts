@@ -22,6 +22,7 @@ const totals = {
 const sale: Sale = {
   id: "s1",
   category: "peixe",
+  customProduct: null,
   buyer: "=1+1",
   quantity: 1.5,
   unit: "kg",
@@ -78,9 +79,10 @@ describe("export data preparation", () => {
       dateLabel: "31/10/2026, 23:30",
       category: "Peixe",
       buyer: "=1+1",
-      unit: "quilo",
+      unit: "quilos",
       value: 20.3,
     });
+
     expect(data.expenses[0]).toMatchObject({
       date: new Date("2026-11-02T12:00:00.000Z"),
       dateLabel: "02/11/2026, 12:00",
@@ -96,6 +98,19 @@ describe("export data preparation", () => {
       "Sobrou",
       "R$ 15,00",
     ]);
+  });
+
+  it("uses a custom product name in Excel and PDF sales rows", () => {
+    const data = prepareMonthlyExportData(
+      [{ ...sale, category: "outros", customProduct: "Siri" }],
+      [],
+      totals,
+      2026,
+      11
+    );
+
+    expect(data.sales[0].category).toBe("Outro — Siri");
+    expect(preparePdfSalesRows(data)[0][1]).toBe("Outro — Siri");
   });
 
   it("prepares empty tables without altering the selected month", () => {

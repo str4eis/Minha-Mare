@@ -5,6 +5,7 @@ const knownCategoryIds = [
   "ostra",
   "caranguejo",
   "peixe",
+  "camarao",
   "marisco",
   "sururu",
   "outros",

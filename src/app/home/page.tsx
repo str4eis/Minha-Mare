@@ -15,7 +15,7 @@ import SpeakButton from "@/components/audio/SpeakButton";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
-import { saleCategoryMeta } from "@/lib/domain/categories";
+import { getSaleProductLabel } from "@/lib/domain/categories";
 import { moneyInWords } from "@/lib/domain/money-words";
 
 export default function HomePage() {
@@ -143,8 +143,10 @@ export default function HomePage() {
             )}
             {ready &&
               recentSales.map((sale) => {
-                const categoryLabel =
-                  saleCategoryMeta[sale.category]?.label ?? sale.category;
+                const categoryLabel = getSaleProductLabel(
+                  sale.category,
+                  sale.customProduct
+                );
                 return (
                   <li key={sale.id} className="flex items-center gap-3 py-3">
                     <CategoryIcon

@@ -91,6 +91,7 @@ describe("computeTotals", () => {
     const makeSale = (value: number): Sale => ({
       id: `sale-${value}`,
       category: "peixe",
+      customProduct: null,
       buyer: "Compradora",
       quantity: 1,
       unit: "kg",

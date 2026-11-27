@@ -1,7 +1,7 @@
 import {
   fishingExpenseMeta,
+  getSaleProductLabel,
   homeExpenseMeta,
-  saleCategoryMeta,
 } from "../domain/categories";
 import { currentMonthLabel, formatBRL } from "../domain/format";
 import { formatSaleUnit } from "../domain/sale-entry";
@@ -139,10 +139,10 @@ export function prepareMonthlyExportData(
     sales: sales.map((sale) => ({
       date: excelDateInRecife(sale.date),
       dateLabel: formatExportDate(sale.date),
-      category: saleCategoryMeta[sale.category].label,
+      category: getSaleProductLabel(sale.category, sale.customProduct),
       buyer: sale.buyer,
       quantity: sale.quantity,
-      unit: formatSaleUnit(sale.unit),
+      unit: formatSaleUnit(sale.unit, sale.quantity),
       value: sale.value,
     })),
     expenses: expenses.map((expense) => ({

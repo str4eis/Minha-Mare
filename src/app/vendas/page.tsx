@@ -8,7 +8,7 @@ import DataStatus from "@/components/ui/DataStatus";
 import Header from "@/components/layout/Header";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
-import { saleCategoryMeta } from "@/lib/domain/categories";
+import { getSaleProductLabel } from "@/lib/domain/categories";
 import { filterItems } from "@/lib/domain/filters";
 import { formatSaleUnit } from "@/lib/domain/sale-entry";
 
@@ -27,7 +27,11 @@ export default function VendasPage() {
     () =>
       filterItems(state.sales, selectedMonth.year, selectedMonth.month, {
         query,
-        getSearchText: (sale) => sale.buyer,
+        getSearchText: (sale) =>
+          `${sale.buyer} ${getSaleProductLabel(
+            sale.category,
+            sale.customProduct
+          )}`,
       }).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)),
     [state.sales, selectedMonth, query]
   );
@@ -92,8 +96,10 @@ export default function VendasPage() {
           )}
           {ready &&
             sortedSales.map((sale) => {
-              const categoryLabel =
-                saleCategoryMeta[sale.category]?.label ?? sale.category;
+              const categoryLabel = getSaleProductLabel(
+                sale.category,
+                sale.customProduct
+              );
               return (
                 <li key={sale.id} className="py-3 flex items-center gap-3">
                   <CategoryIcon category={sale.category} kind="venda" />
@@ -102,7 +108,8 @@ export default function VendasPage() {
                       {sale.buyer}
                     </p>
                     <p className="text-base text-mare-slate">
-                      {categoryLabel} · {sale.quantity} {formatSaleUnit(sale.unit)} ·{" "}
+                      {categoryLabel} · {sale.quantity}{" "}
+                      {formatSaleUnit(sale.unit, sale.quantity)} ·{" "}
                       {formatDateShort(sale.date)}
                     </p>
                   </div>

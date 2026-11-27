@@ -1,4 +1,5 @@
 import type { Sale, SaleCategory } from "./types";
+export { formatSaleUnit } from "./format";
 
 const defaultUnits: Record<SaleCategory, Sale["unit"]> = {
   ostra: "dz",
@@ -6,6 +7,7 @@ const defaultUnits: Record<SaleCategory, Sale["unit"]> = {
   sururu: "kg",
   marisco: "kg",
   peixe: "kg",
+  camarao: "kg",
   outros: "kg",
 };
 
@@ -16,10 +18,6 @@ export interface LastSalePriceSuggestion {
 
 export function getDefaultSaleUnit(category: SaleCategory): Sale["unit"] {
   return defaultUnits[category];
-}
-
-export function formatSaleUnit(unit: Sale["unit"]): string {
-  return unit === "dz" ? "dúzia" : "quilo";
 }
 
 export function parseQuantityInput(input: string): number | null {

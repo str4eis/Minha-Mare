@@ -11,6 +11,7 @@ import { Expense, Sale } from "../domain/types";
 const sampleSale: Sale = {
   id: "s1",
   category: "peixe",
+  customProduct: null,
   buyer: "Compradora de exemplo",
   quantity: 1,
   unit: "kg",
@@ -109,6 +110,26 @@ describe("migrateStoredState", () => {
       metaAposentadoria: 700,
       poupancaAposentadoria: 130,
     });
+  });
+
+  it("keeps custom products and accepts shrimp sold by the liter", () => {
+    const shrimpSale: Sale = {
+      ...realSale,
+      id: "s-shrimp",
+      category: "camarao",
+      customProduct: "Siri",
+      unit: "litro",
+    };
+    const result = migrateStoredState(
+      storedState({
+        sales: [shrimpSale],
+        metaAposentadoria: 700,
+        poupancaAposentadoria: 130,
+      })
+    );
+
+    expect(result.state.sales).toEqual([shrimpSale]);
+    expect(result.discarded).toBe(0);
   });
 
   it("backs up invalid JSON without changing the primary value", () => {

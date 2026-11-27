@@ -30,6 +30,7 @@ const SALE_CATEGORIES = new Set<SaleCategory>([
   "peixe",
   "marisco",
   "sururu",
+  "camarao",
   "outros",
 ]);
 const FISHING_EXPENSE_CATEGORIES = new Set<FishingExpenseCategory>([
@@ -83,6 +84,7 @@ function isValidDate(value: unknown): value is string {
 
 function migrateSale(value: unknown): Sale | null {
   if (!isRecord(value)) return null;
+  const customProduct = value.customProduct ?? null;
   if (
     typeof value.id !== "string" ||
     value.id.length === 0 ||
@@ -90,7 +92,8 @@ function migrateSale(value: unknown): Sale | null {
     !SALE_CATEGORIES.has(value.category as SaleCategory) ||
     typeof value.buyer !== "string" ||
     !isPositiveFiniteNumber(value.quantity) ||
-    (value.unit !== "dz" && value.unit !== "kg") ||
+    (value.unit !== "dz" && value.unit !== "kg" && value.unit !== "litro") ||
+    (customProduct !== null && typeof customProduct !== "string") ||
     !isPositiveFiniteNumber(value.value) ||
     !isValidDate(value.date)
   ) {
@@ -100,6 +103,7 @@ function migrateSale(value: unknown): Sale | null {
   return {
     id: value.id,
     category: value.category as SaleCategory,
+    customProduct,
     buyer: value.buyer,
     quantity: value.quantity,
     unit: value.unit,

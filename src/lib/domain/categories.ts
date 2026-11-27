@@ -10,8 +10,20 @@ export const saleCategoryMeta: Record<SaleCategory, { label: string }> = {
   peixe: { label: "Peixe" },
   marisco: { label: "Marisco" },
   sururu: { label: "Sururu" },
+  camarao: { label: "Camarão" },
   outros: { label: "Outro" },
 };
+
+export function getSaleProductLabel(
+  category: SaleCategory,
+  customProduct: string | null = null
+): string {
+  const label = saleCategoryMeta[category].label;
+  const productName = customProduct?.trim();
+  return category === "outros" && productName
+    ? `${label} — ${productName}`
+    : label;
+}
 
 export const fishingExpenseMeta: Record<
   FishingExpenseCategory,

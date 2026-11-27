@@ -7,6 +7,7 @@ import { insertImportedExpenses, insertImportedSales } from "./local-import";
 const sales: Array<Omit<Sale, "id">> = [
   {
     category: "peixe",
+    customProduct: null,
     buyer: "Compradora",
     quantity: 2,
     unit: "kg",

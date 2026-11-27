@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, Minus, Plus } from "lucide-react";
+import { CircleCheck, Mic, Minus, Plus } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import DataStatus from "@/components/ui/DataStatus";
@@ -15,6 +15,11 @@ import { cn } from "@/lib/utils/cn";
 import { dateInputToISO, isoToDateInput } from "@/lib/domain/period";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
 import { moneyInWords } from "@/lib/domain/money-words";
+import {
+  isSpeechRecognitionSupported,
+  startSpeechRecognition,
+  type SpeechRecognitionSession,
+} from "@/lib/audio/speech-input";
 import {
   formatQuantityInput,
   formatSaleUnit,
@@ -32,6 +37,7 @@ const categories: SaleCategory[] = [
   "sururu",
   "marisco",
   "peixe",
+  "camarao",
   "outros",
 ];
 
@@ -45,10 +51,16 @@ export default function SaleForm({ sale }: SaleFormProps) {
   const [category, setCategory] = useState<SaleCategory | null>(
     sale?.category ?? null
   );
-  const [unit, setUnit] = useState<"dz" | "kg">(sale?.unit ?? "kg");
+  const [unit, setUnit] = useState<Sale["unit"]>(sale?.unit ?? "kg");
   const [quantity, setQuantity] = useState(
     sale ? formatQuantityInput(sale.quantity) : "1"
   );
+  const [customProduct, setCustomProduct] = useState(
+    sale?.customProduct ?? ""
+  );
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [speechError, setSpeechError] = useState("");
   const [buyer, setBuyer] = useState(sale?.buyer ?? "");
   const [value, setValue] = useState(
     sale ? formatMoneyInput(sale.value.toFixed(2)) : ""
@@ -57,7 +69,7 @@ export default function SaleForm({ sale }: SaleFormProps) {
   const [priceSuggestion, setPriceSuggestion] = useState<{
     category: SaleCategory;
     pricePerUnit: number;
-    unit: "dz" | "kg";
+    unit: Sale["unit"];
   } | null>(null);
   const [lastSaleError, setLastSaleError] = useState("");
   const [priceError, setPriceError] = useState("");
@@ -68,6 +80,15 @@ export default function SaleForm({ sale }: SaleFormProps) {
   const [saving, setSaving] = useState(false);
   const valueWasEdited = useRef(Boolean(sale));
   const priceRequestId = useRef(0);
+  const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
+
+  useEffect(() => {
+    setSpeechSupported(isSpeechRecognitionSupported());
+    return () => {
+      recognitionRef.current?.cancel();
+      recognitionRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const todayDate = isoToDateInput(new Date().toISOString());
@@ -170,6 +191,8 @@ export default function SaleForm({ sale }: SaleFormProps) {
 
     const saleData = {
       category,
+      customProduct:
+        category === "outros" ? customProduct.trim() || null : null,
       buyer: buyer.trim() || "Venda avulsa",
       quantity: quantityValue,
       unit,
@@ -195,10 +218,17 @@ export default function SaleForm({ sale }: SaleFormProps) {
   };
 
   const chooseCategory = (nextCategory: SaleCategory) => {
+    if (nextCategory !== "outros") {
+      recognitionRef.current?.cancel();
+      recognitionRef.current = null;
+      setListening(false);
+      setCustomProduct("");
+    }
     setCategory(nextCategory);
     setUnit(getDefaultSaleUnit(nextCategory));
     setPriceSuggestion(null);
     setPriceError("");
+    setSpeechError("");
     if (!sale) {
       setValue("");
       valueWasEdited.current = false;
@@ -208,6 +238,7 @@ export default function SaleForm({ sale }: SaleFormProps) {
   const repeatLastSale = () => {
     if (!lastSale) return;
     setCategory(lastSale.category);
+    setCustomProduct(lastSale.customProduct ?? "");
     setUnit(lastSale.unit);
     setQuantity(formatQuantityInput(lastSale.quantity));
     setBuyer(lastSale.buyer === "Venda avulsa" ? "" : lastSale.buyer);
@@ -218,6 +249,29 @@ export default function SaleForm({ sale }: SaleFormProps) {
     );
     setDate(today);
     valueWasEdited.current = true;
+  };
+
+  const toggleSpeechInput = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    setSpeechError("");
+    const session = startSpeechRecognition({
+      onTranscript: setCustomProduct,
+      onError: setSpeechError,
+      onEnd: () => {
+        recognitionRef.current = null;
+        setListening(false);
+      },
+    });
+
+    if (session) {
+      recognitionRef.current = session;
+      setListening(true);
+    }
   };
 
   const updateQuantity = (next: number) => {
@@ -281,6 +335,40 @@ export default function SaleForm({ sale }: SaleFormProps) {
           })}
         </div>
 
+        {category === "outros" && (
+          <div className="mt-4 rounded-xl2 bg-mare-card p-4">
+            <label
+              htmlFor="sale-custom-product"
+              className="text-lg font-semibold text-mare-institutional"
+            >
+              Qual produto você vendeu?
+            </label>
+            <p className="mt-1 text-lg text-mare-slate">Opcional.</p>
+            <input
+              id="sale-custom-product"
+              value={customProduct}
+              onChange={(event) => setCustomProduct(event.target.value)}
+              className="mt-2 min-h-14 w-full rounded-xl2 border border-black/10 bg-white px-3 text-lg focus:outline-none"
+            />
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={toggleSpeechInput}
+                aria-pressed={listening}
+                className="mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-mare-institutional px-4 text-lg font-semibold text-white"
+              >
+                <Mic className="h-5 w-5" aria-hidden="true" />
+                {listening ? "Ouvindo..." : "Falar"}
+              </button>
+            )}
+            {speechError && (
+              <p className="mt-2 text-lg text-mare-negative" role="alert">
+                {speechError}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="mt-5 rounded-xl2 bg-mare-card p-4">
           <h2 className="text-lg font-semibold text-mare-institutional">
             2. Quanto você vendeu?
@@ -329,7 +417,7 @@ export default function SaleForm({ sale }: SaleFormProps) {
             </p>
           )}
           <div className={cn("mt-3 flex gap-2", !category && "opacity-50")}>
-            {(["dz", "kg"] as const).map((currentUnit) => (
+            {(["dz", "kg", "litro"] as const).map((currentUnit) => (
               <button
                 key={currentUnit}
                 type="button"
@@ -343,7 +431,7 @@ export default function SaleForm({ sale }: SaleFormProps) {
                     : "bg-white text-mare-slate border border-black/5"
                 )}
               >
-                {currentUnit === "dz" ? "Dúzia" : "Quilo"}
+                {formatSaleUnit(currentUnit)}
               </button>
             ))}
           </div>
@@ -372,15 +460,21 @@ export default function SaleForm({ sale }: SaleFormProps) {
               {moneyInWords(parsedValue)}
             </p>
           )}
-          {category && numericValue !== null && (
+          {category && numericValue !== null && quantityValue !== null && (
             <div className="mt-3">
               <SpeakButton
                 label="Ouvir valor"
-                text={`Produto: ${saleCategoryMeta[
-                  category
-                ].label}. Valor total: ${moneyInWords(
-                  numericValue
-                )}.`}
+                text={`${
+                  category === "outros" && customProduct.trim()
+                    ? customProduct.trim()
+                    : saleCategoryMeta[category].label
+                }, ${new Intl.NumberFormat("pt-BR", {
+                  maximumFractionDigits: 3,
+                  useGrouping: false,
+                }).format(quantityValue)} ${formatSaleUnit(
+                  unit,
+                  quantityValue
+                )}, ${moneyInWords(numericValue)}.`}
               />
             </div>
           )}

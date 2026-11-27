@@ -56,6 +56,31 @@ describe("parseLocalImport", () => {
     expect(hasImportableLocalData(result)).toBe(true);
   });
 
+  it("imports shrimp and liter sales while keeping legacy sales without a name", () => {
+    const shrimpSale = {
+      ...realSale,
+      id: "s1770000000001",
+      category: "camarao",
+      unit: "litro",
+      customProduct: "Siri",
+    };
+    const result = parseLocalImport(
+      JSON.stringify({
+        sales: [realSale, shrimpSale],
+        expenses: [],
+      })
+    );
+
+    expect(result?.sales).toMatchObject([
+      { customProduct: null },
+      {
+        category: "camarao",
+        unit: "litro",
+        customProduct: "Siri",
+      },
+    ]);
+  });
+
   it("skips invalid values, categories, units, kinds, and dates", () => {
     const result = parseLocalImport(
       JSON.stringify({

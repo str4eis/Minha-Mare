@@ -9,6 +9,7 @@ import type { Expense, Sale } from "../domain/types";
 
 const sale: Omit<Sale, "id"> = {
   category: "peixe",
+  customProduct: null,
   buyer: "Restaurante do Mar",
   quantity: 2,
   unit: "kg",
@@ -37,6 +38,39 @@ describe("database mappers", () => {
     });
 
     expect(result).toEqual({ ...sale, id: "sale-id" });
+  });
+
+  it("preserves shrimp, liters, and a custom product name", () => {
+    const customSale: Omit<Sale, "id"> = {
+      ...sale,
+      category: "outros",
+      customProduct: "Siri",
+      unit: "litro",
+    };
+    const insert = toSaleInsert(customSale);
+
+    expect(insert).toMatchObject({
+      category: "outros",
+      custom_product: "Siri",
+      unit: "litro",
+    });
+    expect(
+      mapSaleRow({
+        ...insert,
+        id: "custom-sale",
+        occurred_at: customSale.date,
+      })
+    ).toEqual({ ...customSale, id: "custom-sale" });
+    expect(
+      mapSaleRow({
+        ...insert,
+        id: "shrimp-sale",
+        category: "camarao",
+        custom_product: null,
+        unit: "kg",
+        occurred_at: customSale.date,
+      })
+    ).toMatchObject({ category: "camarao", unit: "kg", customProduct: null });
   });
 
   it("maps expenses to database rows and back", () => {

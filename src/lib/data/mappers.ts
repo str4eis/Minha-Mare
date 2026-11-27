@@ -54,6 +54,7 @@ const saleCategories = new Set([
   "peixe",
   "marisco",
   "sururu",
+  "camarao",
   "outros",
 ]);
 const fishingCategories = new Set([
@@ -78,6 +79,7 @@ export function mapSaleRow(value: unknown): Sale {
   if (!isRecord(value)) throw new TypeError("Venda recebida em formato inválido.");
   const amount = finitePositiveNumber(value.value);
   const quantity = finitePositiveNumber(value.quantity);
+  const customProduct = value.custom_product ?? null;
 
   if (
     typeof value.id !== "string" ||
@@ -85,7 +87,8 @@ export function mapSaleRow(value: unknown): Sale {
     !saleCategories.has(String(value.category)) ||
     typeof value.buyer !== "string" ||
     quantity === null ||
-    (value.unit !== "dz" && value.unit !== "kg") ||
+    (value.unit !== "dz" && value.unit !== "kg" && value.unit !== "litro") ||
+    (customProduct !== null && typeof customProduct !== "string") ||
     amount === null ||
     !validDate(value.occurred_at)
   ) {
@@ -95,6 +98,7 @@ export function mapSaleRow(value: unknown): Sale {
   return {
     id: value.id,
     category: value.category as Sale["category"],
+    customProduct,
     buyer: value.buyer,
     quantity,
     unit: value.unit,
@@ -170,6 +174,7 @@ export function toSaleInsert(
   return {
     ...(id ? { id } : {}),
     category: sale.category,
+    custom_product: sale.customProduct,
     buyer: sale.buyer,
     quantity: sale.quantity,
     unit: sale.unit,

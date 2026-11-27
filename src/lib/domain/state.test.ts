@@ -14,6 +14,7 @@ import { AppState, Expense, Sale } from "./types";
 const sale: Sale = {
   id: "s-existing",
   category: "peixe",
+  customProduct: null,
   buyer: "Compradora",
   quantity: 2,
   unit: "kg",
@@ -52,6 +53,7 @@ describe("sale state operations", () => {
   it("updates a sale and preserves its id", () => {
     const result = updateSale(initialState, sale.id, {
       category: sale.category,
+      customProduct: sale.customProduct,
       buyer: "Nova compradora",
       quantity: sale.quantity,
       unit: sale.unit,
@@ -141,6 +143,7 @@ describe("state operation validation", () => {
     expect(() =>
       updateSale(initialState, sale.id, {
         category: sale.category,
+        customProduct: sale.customProduct,
         buyer: sale.buyer,
         quantity: sale.quantity,
         unit: sale.unit,

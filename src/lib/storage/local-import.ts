@@ -36,6 +36,7 @@ const saleCategories = new Set<SaleCategory>([
   "peixe",
   "marisco",
   "sururu",
+  "camarao",
   "outros",
 ]);
 const fishingCategories = new Set<FishingExpenseCategory>([
@@ -98,6 +99,9 @@ export function isSeedExpense(value: unknown): boolean {
 }
 
 function parseSale(value: unknown): Omit<Sale, "id"> | null {
+  const customProduct = isRecord(value)
+    ? (value.customProduct ?? null)
+    : null;
   if (
     !isRecord(value) ||
     typeof value.id !== "string" ||
@@ -106,7 +110,8 @@ function parseSale(value: unknown): Omit<Sale, "id"> | null {
     !saleCategories.has(value.category as SaleCategory) ||
     typeof value.buyer !== "string" ||
     !isPositiveFiniteNumber(value.quantity) ||
-    (value.unit !== "dz" && value.unit !== "kg") ||
+    (value.unit !== "dz" && value.unit !== "kg" && value.unit !== "litro") ||
+    (customProduct !== null && typeof customProduct !== "string") ||
     !isPositiveFiniteNumber(value.value) ||
     !isValidDate(value.date)
   ) {
@@ -115,6 +120,7 @@ function parseSale(value: unknown): Omit<Sale, "id"> | null {
 
   return {
     category: value.category as SaleCategory,
+    customProduct,
     buyer: value.buyer,
     quantity: value.quantity,
     unit: value.unit,

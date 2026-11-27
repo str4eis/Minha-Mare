@@ -4,14 +4,16 @@ export type SaleCategory =
   | "peixe"
   | "marisco"
   | "sururu"
+  | "camarao"
   | "outros";
 
 export interface Sale {
   id: string;
   category: SaleCategory;
+  customProduct: string | null;
   buyer: string;
   quantity: number;
-  unit: "dz" | "kg";
+  unit: "dz" | "kg" | "litro";
   value: number;
   date: string; // ISO string
 }
