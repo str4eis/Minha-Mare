@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { safeNextPath } from "@/lib/auth/auth-routes";
+import { getOAuthSuccessPath } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/server";
 
 function redirectToLogin(request: NextRequest, errorCode: string) {
@@ -12,7 +13,9 @@ function redirectToLogin(request: NextRequest, errorCode: string) {
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
-  const nextPath = safeNextPath(request.nextUrl.searchParams.get("next")) ?? "/home";
+  const nextPath = getOAuthSuccessPath(
+    request.nextUrl.searchParams.get("next")
+  );
   const oauthError = request.nextUrl.searchParams.get("error");
 
   if (oauthError !== null) {

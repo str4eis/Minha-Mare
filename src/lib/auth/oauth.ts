@@ -1,3 +1,10 @@
+import { safeNextPath } from "./auth-routes";
+
+export function getOAuthSuccessPath(nextPath?: string | null): string {
+  const destination = safeNextPath(nextPath);
+  return destination && destination !== "/" ? destination : "/home";
+}
+
 export function mapOAuthError(error: unknown): string {
   const details =
     typeof error === "string"
@@ -31,6 +38,22 @@ export function mapOAuthError(error: unknown): string {
   }
 
   return "Não deu certo. Tente de novo em alguns instantes.";
+}
+
+export function getOAuthRedirectUrl(
+  origin: string,
+  nextPath?: string | null
+): string {
+  const callbackUrl = new URL("/auth/callback", origin);
+  callbackUrl.searchParams.set("next", getOAuthSuccessPath(nextPath));
+  return callbackUrl.toString();
+}
+
+export function getSessionRedirectPath(
+  session: { user: unknown } | null,
+  nextPath?: string | null
+): string | null {
+  return session?.user ? getOAuthSuccessPath(nextPath) : null;
 }
 
 export function isEmbeddedBrowser(userAgent: string): boolean {

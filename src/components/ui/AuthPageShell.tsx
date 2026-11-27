@@ -34,7 +34,7 @@ export default function AuthPageShell({
       </Link>
       <section className="my-auto w-full">
         <h1 className="mt-8 text-2xl font-semibold text-mare-ink">{title}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-mare-slate">{description}</p>
+        <p className="mt-2 text-lg leading-relaxed text-mare-slate">{description}</p>
         <div className="mt-6">{children}</div>
       </section>
       <footer className="mt-auto pt-8 text-xs text-mare-slate">

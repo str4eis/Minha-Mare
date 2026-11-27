@@ -34,7 +34,7 @@ export default function LegalPageShell({
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         <Link
           href="/"
-          className="mb-4 inline-flex min-h-12 items-center text-lg font-medium text-mare-primary underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mare-primary"
+          className="mb-4 inline-flex min-h-14 items-center text-lg font-medium text-mare-primary underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mare-primary"
         >
           ← Voltar
         </Link>
@@ -55,7 +55,7 @@ export default function LegalPageShell({
           <LegalLinks className="text-lg text-mare-secondary" />
           <Link
             href="/"
-            className="mt-4 flex min-h-12 items-center justify-center text-lg font-medium text-mare-primary underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mare-primary"
+            className="mt-4 flex min-h-14 items-center justify-center text-lg font-medium text-mare-primary underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mare-primary"
           >
             Voltar para o início
           </Link>

@@ -8,6 +8,15 @@ export function isAuthPath(pathname: string): boolean {
   return ["/login", "/cadastro"].includes(pathname);
 }
 
+export function getAuthenticatedRedirectPath(
+  pathname: string,
+  hasSession: boolean
+): string | null {
+  return hasSession && (pathname === "/" || isAuthPath(pathname))
+    ? "/home"
+    : null;
+}
+
 export function safeNextPath(value: string | null | undefined): string | null {
   if (
     !value ||

@@ -103,7 +103,7 @@ export default function LocalImportPrompt() {
       if (!data || !hasImportableLocalData(data)) return;
       setPrompt({ raw, data });
     } catch {
-      setError("Não foi possível ler os dados locais neste navegador.");
+      setError("Não foi possível acessar os lançamentos guardados neste aparelho.");
     }
   }, [ready, userId]);
 
@@ -133,13 +133,23 @@ export default function LocalImportPrompt() {
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.removeItem(key);
       setPrompt(null);
+      const ignoredMessage =
+        prompt.data.ignoredCount > 0
+          ? ` ${prompt.data.ignoredCount} ${
+              prompt.data.ignoredCount === 1
+                ? "lançamento não pôde"
+                : "lançamentos não puderam"
+            } ${
+                prompt.data.ignoredCount === 1 ? "ser aproveitado" : "ser aproveitados"
+            }.`
+          : "";
       setResult(
-        `Importação concluída: ${prompt.data.sales.length} vendas e ${prompt.data.expenses.length} gastos. ${prompt.data.ignoredCount} itens inválidos foram ignorados.`
+        `Pronto! ${prompt.data.sales.length} vendas e ${prompt.data.expenses.length} gastos foram salvos na conta.${ignoredMessage}`
       );
       refreshData();
     } catch {
       setError(
-        "Não foi possível concluir a importação. Seus dados locais foram mantidos; tente novamente."
+        "Não foi possível trazer os lançamentos. Eles continuam guardados neste aparelho. Tente novamente."
       );
     } finally {
       setBusy(false);
@@ -148,7 +158,7 @@ export default function LocalImportPrompt() {
 
   function discardData() {
     if (!userId || busy) return;
-    if (!window.confirm("Isso apaga os dados deste navegador. Continuar?")) {
+    if (!window.confirm("Isso apaga os lançamentos guardados neste aparelho. Quer continuar?")) {
       return;
     }
     try {
@@ -163,15 +173,16 @@ export default function LocalImportPrompt() {
 
   if (result) {
     return (
-      <aside className="sticky top-0 z-30 border-b border-mare-institutional/20 bg-mare-accent px-4 py-3 text-sm text-mare-institutional">
+      <aside className="sticky top-0 z-30 border-b border-mare-institutional/20 bg-mare-accent px-4 py-3 text-base text-mare-institutional">
         <div className="flex items-start justify-between gap-3">
           <p role="status">{result}</p>
           <button
             type="button"
             aria-label="Fechar mensagem de importação"
             onClick={() => setResult("")}
-            className="font-semibold text-mare-institutional underline"
+            className="flex min-h-14 shrink-0 items-center gap-2 font-semibold text-mare-institutional underline"
           >
+            <span aria-hidden="true">×</span>
             Fechar
           </button>
         </div>
@@ -185,30 +196,38 @@ export default function LocalImportPrompt() {
     <aside className="sticky top-0 z-30 border-b border-mare-purple/10 bg-mare-purpleLight px-4 py-4">
       {prompt && (
         <>
-          <p className="font-semibold text-mare-ink">
-            Encontramos dados salvos neste navegador
+          <p className="text-lg font-semibold text-mare-ink">
+            Encontramos lançamentos guardados neste aparelho
           </p>
-          <p className="mt-1 text-sm text-mare-slate">
+          <p className="mt-1 text-base text-mare-slate">
             {prompt.data.sales.length} vendas e {prompt.data.expenses.length} gastos
-            válidos para importar
+            prontos para trazer para sua conta
             {prompt.data.ignoredCount > 0 &&
-              `; ${prompt.data.ignoredCount} itens inválidos serão ignorados`}
-            .
+              `. ${prompt.data.ignoredCount} ${
+                prompt.data.ignoredCount === 1
+                  ? "lançamento não poderá"
+                  : "lançamentos não poderão"
+              } ${
+                  prompt.data.ignoredCount === 1
+                    ? "ser aproveitado"
+                    : "ser aproveitados"
+              }`}
+            {prompt.data.ignoredCount === 0 && "."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={importData}
               disabled={busy}
-              className="rounded-full bg-mare-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="min-h-14 rounded-full bg-mare-primary px-4 text-lg font-semibold text-white disabled:opacity-60"
             >
-              {busy ? "Importando..." : "Importar para minha conta"}
+              {busy ? "Trazendo..." : "Trazer para minha conta"}
             </button>
             <button
               type="button"
               onClick={discardData}
               disabled={busy}
-              className="rounded-full border border-mare-purple px-4 py-2 text-sm font-semibold text-mare-purple disabled:opacity-60"
+              className="min-h-14 rounded-full border border-mare-purple px-4 text-lg font-semibold text-mare-purple disabled:opacity-60"
             >
               Descartar
             </button>
@@ -216,7 +235,7 @@ export default function LocalImportPrompt() {
         </>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-sm text-mare-negative">
+        <p role="alert" className="mt-2 text-base text-mare-negative">
           {error}
         </p>
       )}

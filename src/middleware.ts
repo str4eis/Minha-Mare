@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isAuthPath, isProtectedPath } from "@/lib/auth/auth-routes";
+import {
+  getAuthenticatedRedirectPath,
+  isProtectedPath,
+} from "@/lib/auth/auth-routes";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -38,9 +41,13 @@ export async function middleware(request: NextRequest) {
     return redirect;
   }
 
-  if (isAuthPath(pathname) && user) {
+  const authenticatedRedirectPath = getAuthenticatedRedirectPath(
+    pathname,
+    Boolean(user)
+  );
+  if (authenticatedRedirectPath) {
     const destination = request.nextUrl.clone();
-    destination.pathname = "/home";
+    destination.pathname = authenticatedRedirectPath;
     destination.search = "";
     const redirect = NextResponse.redirect(destination);
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));

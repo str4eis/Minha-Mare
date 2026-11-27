@@ -51,5 +51,6 @@ body {
   div[vw].enabled {
     bottom: calc(6rem + env(safe-area-inset-bottom)) !important;
     right: 0.5rem !important;
+    z-index: 20 !important;
   }
 }

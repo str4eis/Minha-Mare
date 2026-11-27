@@ -162,7 +162,7 @@ export default function InstallAppBanner({
           type="button"
           onClick={dismissBanner}
           aria-label="Fechar aviso de instalação"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-mare-institutional"
+          className="flex min-h-14 min-w-14 shrink-0 items-center justify-center rounded-full text-mare-institutional"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>

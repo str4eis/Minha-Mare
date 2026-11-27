@@ -49,7 +49,7 @@ export default function RecuperarSenhaPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="recovery-email" className="block text-sm font-medium">
+          <label htmlFor="recovery-email" className="block text-lg font-medium">
             E-mail
           </label>
           <input
@@ -59,20 +59,20 @@ export default function RecuperarSenhaPage() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+            className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
           />
         </div>
-        {error && <p role="alert" className="text-sm text-mare-negative">{error}</p>}
-        {message && <p role="status" className="text-sm text-mare-tealDark">{message}</p>}
+        {error && <p role="alert" className="text-base text-mare-negative">{error}</p>}
+        {message && <p role="status" className="text-base text-mare-tealDark">{message}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-mare-primary py-3.5 font-semibold text-white disabled:opacity-60"
+          className="min-h-14 w-full rounded-full bg-mare-primary py-3.5 text-lg font-semibold text-white disabled:opacity-60"
         >
           {submitting ? "Enviando..." : "Enviar instruções"}
         </button>
       </form>
-      <p className="mt-5 text-center text-sm">
+      <p className="mt-5 text-center text-base">
         <Link href="/login" className="font-semibold text-mare-purple">
           Voltar para entrar
         </Link>

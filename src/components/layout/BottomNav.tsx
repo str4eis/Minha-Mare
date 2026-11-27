@@ -26,7 +26,7 @@ export default function BottomNav() {
           <button
             type="button"
             onClick={undoDelete}
-            className="flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-white px-4 text-lg font-semibold text-mare-institutional"
+            className="flex min-h-14 shrink-0 items-center gap-2 rounded-full bg-white px-4 text-lg font-semibold text-mare-institutional"
           >
             <Undo2 className="h-5 w-5" aria-hidden="true" />
             Desfazer

@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { safeNextPath } from "@/lib/auth/auth-routes";
-import { isEmbeddedBrowser, mapOAuthError } from "@/lib/auth/oauth";
+import {
+  getOAuthRedirectUrl,
+  isEmbeddedBrowser,
+  mapOAuthError,
+} from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/client";
 
 interface GoogleSignInButtonProps {
@@ -27,13 +30,13 @@ export default function GoogleSignInButton({
     setErrorMessage("");
 
     try {
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("next", safeNextPath(nextPath) ?? "/home");
-
       const { error } = await createClient().auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: callbackUrl.toString(),
+          redirectTo: getOAuthRedirectUrl(
+            window.location.origin,
+            nextPath
+          ),
           queryParams: { prompt: "select_account" },
         },
       });
@@ -67,13 +70,13 @@ export default function GoogleSignInButton({
     <div className="w-full">
       {embeddedBrowser && (
         <div className="mb-4 rounded-xl2 border border-mare-purple/20 bg-mare-purpleLight p-4 text-left">
-          <p className="text-base leading-relaxed text-mare-institutional">
+          <p className="text-lg leading-relaxed text-mare-institutional">
             Para entrar com o Google, abra este endereço no Chrome.
           </p>
           <button
             type="button"
             onClick={handleCopyAddress}
-            className="mt-3 min-h-11 rounded-full border border-mare-primary px-4 text-base font-semibold text-mare-primary"
+            className="mt-3 min-h-14 rounded-full border border-mare-primary px-4 text-lg font-semibold text-mare-primary"
           >
             Copiar endereço
           </button>

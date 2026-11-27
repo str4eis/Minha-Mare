@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isAuthPath, isProtectedPath, safeNextPath } from "./auth-routes";
+import {
+  getAuthenticatedRedirectPath,
+  isAuthPath,
+  isProtectedPath,
+  safeNextPath,
+} from "./auth-routes";
 
 describe("auth route helpers", () => {
   it("accepts only safe internal next paths", () => {
@@ -25,6 +30,13 @@ describe("auth route helpers", () => {
     expect(isAuthPath("/redefinir-senha")).toBe(false);
     expect(isAuthPath("/mais")).toBe(false);
     expect(isAuthPath("/auth/callback")).toBe(false);
+  });
+
+  it("redirects an authenticated visitor from the root to home", () => {
+    expect(getAuthenticatedRedirectPath("/", true)).toBe("/home");
+    expect(getAuthenticatedRedirectPath("/", false)).toBeNull();
+    expect(getAuthenticatedRedirectPath("/login", true)).toBe("/home");
+    expect(getAuthenticatedRedirectPath("/privacidade", true)).toBeNull();
   });
 
   it.each(["/privacidade", "/termos"])(

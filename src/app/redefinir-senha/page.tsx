@@ -49,7 +49,7 @@ export default function RedefinirSenhaPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="new-password" className="block text-sm font-medium">
+          <label htmlFor="new-password" className="block text-lg font-medium">
             Nova senha
           </label>
           <input
@@ -60,11 +60,11 @@ export default function RedefinirSenhaPage() {
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+            className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
           />
         </div>
         <div>
-          <label htmlFor="new-password-confirm" className="block text-sm font-medium">
+          <label htmlFor="new-password-confirm" className="block text-lg font-medium">
             Confirmar nova senha
           </label>
           <input
@@ -74,14 +74,14 @@ export default function RedefinirSenhaPage() {
             required
             value={confirmation}
             onChange={(event) => setConfirmation(event.target.value)}
-            className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+            className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
           />
         </div>
-        {error && <p role="alert" className="text-sm text-mare-negative">{error}</p>}
+        {error && <p role="alert" className="text-base text-mare-negative">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-mare-primary py-3.5 font-semibold text-white disabled:opacity-60"
+          className="min-h-14 w-full rounded-full bg-mare-primary py-3.5 text-lg font-semibold text-white disabled:opacity-60"
         >
           {submitting ? "Salvando..." : "Salvar nova senha"}
         </button>

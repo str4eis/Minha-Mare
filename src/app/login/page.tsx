@@ -1,13 +1,16 @@
 "use client";
 
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthPageShell from "@/components/ui/AuthPageShell";
 import { mapAuthError } from "@/lib/auth/auth-errors";
 import { isValidEmail } from "@/lib/auth/auth-validation";
 import { safeNextPath } from "@/lib/auth/auth-routes";
-import { mapOAuthError } from "@/lib/auth/oauth";
+import {
+  getSessionRedirectPath,
+  mapOAuthError,
+} from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "@/components/ui/GoogleSignInButton";
 
@@ -29,6 +32,57 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sessionError, setSessionError] = useState("");
+  const redirecting = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    let unsubscribe: () => void = () => undefined;
+
+    const redirectForSession = (session: { user: unknown } | null) => {
+      if (!active || redirecting.current) return;
+      const destination = getSessionRedirectPath(session, nextPath);
+      if (!destination) return;
+
+      redirecting.current = true;
+      router.replace(destination);
+    };
+
+    try {
+      const auth = createClient().auth;
+      const { data } = auth.onAuthStateChange((_event, session) => {
+        redirectForSession(session);
+      });
+      unsubscribe = () => data.subscription.unsubscribe();
+
+      void auth
+        .getSession()
+        .then(({ data: sessionData, error: sessionCheckError }) => {
+          if (!active) return;
+          if (sessionCheckError) {
+            setSessionError(
+              "Não foi possível verificar seu acesso. Tente novamente."
+            );
+            return;
+          }
+          redirectForSession(sessionData.session);
+        })
+        .catch(() => {
+          if (active) {
+            setSessionError(
+              "Não foi possível verificar seu acesso. Tente novamente."
+            );
+          }
+        });
+    } catch {
+      setSessionError("Não foi possível verificar seu acesso. Tente novamente.");
+    }
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [nextPath, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,6 +121,11 @@ function LoginForm() {
           {mapOAuthError(oauthError)}
         </p>
       )}
+      {sessionError && (
+        <p role="alert" className="mb-4 text-base leading-relaxed text-mare-negative">
+          {sessionError}
+        </p>
+      )}
       <GoogleSignInButton nextPath={nextPath ?? "/home"} />
 
       {emailMode ? (
@@ -76,7 +135,7 @@ function LoginForm() {
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium">
+              <label htmlFor="login-email" className="block text-lg font-medium">
                 E-mail
               </label>
               <input
@@ -86,11 +145,11 @@ function LoginForm() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+                className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
               />
             </div>
             <div>
-              <label htmlFor="login-password" className="block text-sm font-medium">
+              <label htmlFor="login-password" className="block text-lg font-medium">
                 Senha
               </label>
               <input
@@ -100,7 +159,7 @@ function LoginForm() {
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+                className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
               />
             </div>
             {error && (
@@ -111,7 +170,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-full bg-mare-primary py-3.5 text-lg font-semibold text-white disabled:opacity-60"
+              className="min-h-14 w-full rounded-full bg-mare-primary py-3.5 text-lg font-semibold text-white disabled:opacity-60"
             >
               {submitting ? "Entrando..." : "Entrar"}
             </button>
@@ -138,7 +197,7 @@ function LoginForm() {
         <div className="mt-4 flex flex-col gap-3 text-center">
           <Link
             href={emailLoginHref}
-            className="flex min-h-12 items-center justify-center text-lg font-medium text-mare-primary underline underline-offset-4"
+            className="flex min-h-14 items-center justify-center text-lg font-medium text-mare-primary underline underline-offset-4"
           >
             Entrar com e-mail e senha
           </Link>

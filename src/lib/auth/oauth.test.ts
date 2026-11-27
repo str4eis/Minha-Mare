@@ -1,5 +1,61 @@
 import { describe, expect, it } from "vitest";
-import { isEmbeddedBrowser, mapOAuthError } from "./oauth";
+import {
+  getOAuthRedirectUrl,
+  getOAuthSuccessPath,
+  getSessionRedirectPath,
+  isEmbeddedBrowser,
+  mapOAuthError,
+} from "./oauth";
+
+describe("OAuth callback URL", () => {
+  it.each([
+    ["http://localhost:3000", "http://localhost:3000/auth/callback?next=%2Fhome"],
+    [
+      "https://minha-mare.vercel.app",
+      "https://minha-mare.vercel.app/auth/callback?next=%2Fhome",
+    ],
+  ])("uses the current app origin: %s", (origin, expected) => {
+    expect(getOAuthRedirectUrl(origin)).toBe(expected);
+  });
+
+  it("keeps a safe destination and rejects an external one", () => {
+    expect(getOAuthRedirectUrl("http://localhost:3000", "/resultados")).toBe(
+      "http://localhost:3000/auth/callback?next=%2Fresultados"
+    );
+    expect(
+      getOAuthRedirectUrl("http://localhost:3000", "//example.com")
+    ).toBe("http://localhost:3000/auth/callback?next=%2Fhome");
+  });
+});
+
+describe("OAuth success path", () => {
+  it.each([undefined, null, "/", "//outside", "https://outside.test"])(
+    "defaults missing or unsafe destinations to home: %s",
+    (nextPath) => {
+      expect(getOAuthSuccessPath(nextPath)).toBe("/home");
+    }
+  );
+
+  it("preserves a safe internal destination", () => {
+    expect(getOAuthSuccessPath("/resultados")).toBe("/resultados");
+  });
+});
+
+describe("getSessionRedirectPath", () => {
+  it("does not redirect without an active session", () => {
+    expect(getSessionRedirectPath(null, "/resultados")).toBeNull();
+  });
+
+  it("redirects an active session to the safe destination", () => {
+    expect(getSessionRedirectPath({ user: { id: "user-1" } })).toBe("/home");
+    expect(getSessionRedirectPath({ user: { id: "user-1" } }, "/resultados")).toBe(
+      "/resultados"
+    );
+    expect(getSessionRedirectPath({ user: { id: "user-1" } }, "//outside")).toBe(
+      "/home"
+    );
+  });
+});
 
 describe("mapOAuthError", () => {
   it.each(["access_denied", "User canceled", { code: "access_denied" }])(

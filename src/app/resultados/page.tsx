@@ -34,7 +34,9 @@ export default function ResultadosPage() {
         : "Os gastos passaram do que entrou. Você pode ver os lançamentos em Mais.";
   const saldoFalado = sobrouPositivo
     ? `sobrou ${moneyInWords(totals.resultado)}`
-    : `o saldo ficou negativo em ${moneyInWords(Math.abs(totals.resultado))}`;
+    : `os gastos passaram o que entrou por ${moneyInWords(
+        Math.abs(totals.resultado)
+      )}`;
   const summarySpeech = `Em ${monthLabel}, entrou ${moneyInWords(
     totals.totalVendido
   )}, saiu ${moneyInWords(totals.totalGastos)} e ${saldoFalado}.`;

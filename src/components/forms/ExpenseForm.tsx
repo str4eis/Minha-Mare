@@ -219,7 +219,7 @@ export default function ExpenseForm({
         </div>
 
         <h2 className="mt-5 text-lg font-semibold text-mare-institutional">
-          O que você comprou?
+          Em que você gastou?
         </h2>
         <div className="mt-3 grid grid-cols-2 gap-3">
           {categories.map((currentCategory) => {

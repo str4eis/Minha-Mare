@@ -58,7 +58,7 @@ export default function ConfirmDialog({
         <h2 id={titleId} className="text-lg font-semibold">
           {title}
         </h2>
-        <p id={descriptionId} className="mt-2 text-sm text-mare-slate">
+        <p id={descriptionId} className="mt-2 text-lg text-mare-slate">
           {description}
         </p>
         <div className="mt-5 flex justify-end gap-3">
@@ -66,14 +66,14 @@ export default function ConfirmDialog({
             ref={cancelButtonRef}
             type="button"
             onClick={onCancel}
-            className="rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-mare-slate hover:bg-mare-card"
+            className="min-h-14 rounded-full border border-black/10 px-4 text-lg font-semibold text-mare-slate hover:bg-mare-card"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-full bg-mare-negative px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="min-h-14 rounded-full bg-mare-negative px-4 text-lg font-semibold text-white hover:opacity-90"
           >
             Excluir
           </button>

@@ -76,7 +76,7 @@ export default function CadastroPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="signup-name" className="block text-sm font-medium">
+          <label htmlFor="signup-name" className="block text-lg font-medium">
             Nome
           </label>
           <input
@@ -85,11 +85,11 @@ export default function CadastroPage() {
             required
             value={fullName}
             onChange={(event) => setFullName(event.target.value)}
-            className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+            className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
           />
         </div>
         <div>
-          <label htmlFor="signup-email" className="block text-sm font-medium">
+          <label htmlFor="signup-email" className="block text-lg font-medium">
             E-mail
           </label>
           <input
@@ -99,11 +99,11 @@ export default function CadastroPage() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+            className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
           />
         </div>
         <div>
-          <label htmlFor="signup-password" className="block text-sm font-medium">
+          <label htmlFor="signup-password" className="block text-lg font-medium">
             Senha
           </label>
           <input
@@ -114,11 +114,11 @@ export default function CadastroPage() {
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+            className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
           />
         </div>
         <div>
-          <label htmlFor="signup-confirm" className="block text-sm font-medium">
+          <label htmlFor="signup-confirm" className="block text-lg font-medium">
             Confirmar senha
           </label>
           <input
@@ -128,20 +128,20 @@ export default function CadastroPage() {
             required
             value={confirmation}
             onChange={(event) => setConfirmation(event.target.value)}
-            className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
+            className="mt-1 min-h-14 w-full rounded-xl2 border border-black/10 px-4 py-3 text-lg"
           />
         </div>
-        {error && <p role="alert" className="text-sm text-mare-negative">{error}</p>}
-        {message && <p role="status" className="text-sm text-mare-tealDark">{message}</p>}
+        {error && <p role="alert" className="text-base text-mare-negative">{error}</p>}
+        {message && <p role="status" className="text-base text-mare-tealDark">{message}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-mare-primary py-3.5 font-semibold text-white disabled:opacity-60"
+          className="min-h-14 w-full rounded-full bg-mare-primary py-3.5 text-lg font-semibold text-white disabled:opacity-60"
         >
           {submitting ? "Criando conta..." : "Criar conta"}
         </button>
       </form>
-      <p className="mt-5 text-center text-sm text-mare-slate">
+      <p className="mt-5 text-center text-base text-mare-slate">
         Já tem conta?{" "}
         <Link href="/login" className="font-semibold text-mare-purple">
           Entrar
