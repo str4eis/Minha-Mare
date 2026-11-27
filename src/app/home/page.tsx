@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowDownRight,
@@ -11,15 +12,23 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import DataStatus from "@/components/ui/DataStatus";
 import InstallAppBanner from "@/components/ui/InstallAppBanner";
+import WelcomeModal from "@/components/ui/WelcomeModal";
 import SpeakButton from "@/components/audio/SpeakButton";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
 import { getSaleProductLabel } from "@/lib/domain/categories";
 import { moneyInWords } from "@/lib/domain/money-words";
+import { hasSeenWelcome } from "@/lib/storage/welcome";
 
 export default function HomePage() {
   const { state, totals, selectedMonth, hydrated, ready } = useStore();
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+
+  useEffect(() => {
+    if (!hasSeenWelcome()) setWelcomeOpen(true);
+  }, []);
+
   const monthLabel = hydrated
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
@@ -172,6 +181,10 @@ export default function HomePage() {
         </section>
       </main>
       <BottomNav />
+      <WelcomeModal
+        open={welcomeOpen}
+        onClose={() => setWelcomeOpen(false)}
+      />
     </div>
   );
 }

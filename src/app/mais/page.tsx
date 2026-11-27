@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  CirclePlay,
   FileDown,
   Search,
   Share2,
@@ -15,6 +16,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import DataStatus from "@/components/ui/DataStatus";
 import Header from "@/components/layout/Header";
 import InstallAppBanner from "@/components/ui/InstallAppBanner";
+import WelcomeModal from "@/components/ui/WelcomeModal";
 import MonthPicker from "@/components/layout/MonthPicker";
 import { useStore } from "@/lib/store";
 import { formatBRL, currentMonthLabel } from "@/lib/domain/format";
@@ -36,6 +38,7 @@ export default function MaisPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   const monthLabel = hydrated
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
@@ -110,6 +113,14 @@ export default function MaisPage() {
           Histórico, relatórios e sua conta.
         </p>
         <InstallAppBanner />
+        <button
+          type="button"
+          onClick={() => setWelcomeOpen(true)}
+          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-mare-institutional px-4 text-lg font-semibold text-white shadow-soft"
+        >
+          <CirclePlay className="h-5 w-5" aria-hidden="true" />
+          Ver vídeo de ajuda
+        </button>
 
         <section className="mt-5">
           <h2 className="text-xl font-semibold text-mare-institutional">
@@ -276,6 +287,10 @@ export default function MaisPage() {
         </section>
       </main>
       <BottomNav />
+      <WelcomeModal
+        open={welcomeOpen}
+        onClose={() => setWelcomeOpen(false)}
+      />
     </div>
   );
 }
