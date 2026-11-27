@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { safeNextPath } from "@/lib/auth-routes";
+import { safeNextPath } from "@/lib/auth/auth-routes";
 import { createClient } from "@/lib/supabase/server";
 
 function redirectToLogin(request: NextRequest, errorCode: string) {

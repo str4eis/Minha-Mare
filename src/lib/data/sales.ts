@@ -1,9 +1,9 @@
-import { getMonthRange } from "../period";
-import type { Sale } from "../types";
+import { getMonthRange } from "../domain/period";
+import type { Sale } from "../domain/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../supabase/database.types";
 import { mapSaleRow, toSaleInsert } from "./mappers";
-import type { SaleCategory } from "../types";
+import type { SaleCategory } from "../domain/types";
 
 type Client = SupabaseClient<Database>;
 

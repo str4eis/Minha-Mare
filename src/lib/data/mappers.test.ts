@@ -5,7 +5,7 @@ import {
   toExpenseInsert,
   toSaleInsert,
 } from "./mappers";
-import type { Expense, Sale } from "../types";
+import type { Expense, Sale } from "../domain/types";
 
 const sale: Omit<Sale, "id"> = {
   category: "peixe",

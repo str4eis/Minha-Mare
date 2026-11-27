@@ -3,23 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, Home, Ship } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import CategoryIcon from "@/components/CategoryIcon";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
-import MoneyInput from "@/components/MoneyInput";
+import BottomNav from "@/components/layout/BottomNav";
+import CategoryIcon from "@/components/forms/CategoryIcon";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
+import MoneyInput from "@/components/ui/MoneyInput";
 import { useStore } from "@/lib/store";
-import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
+import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/domain/categories";
 import {
   Expense,
   ExpenseKind,
   FishingExpenseCategory,
   HomeExpenseCategory,
-} from "@/lib/types";
-import { cn } from "@/lib/cn";
-import { dateInputToISO, isoToDateInput } from "@/lib/period";
-import { formatMoneyInput, parseMoneyInput } from "@/lib/format";
-import { moneyInWords } from "@/lib/money-words";
+} from "@/lib/domain/types";
+import { cn } from "@/lib/utils/cn";
+import { dateInputToISO, isoToDateInput } from "@/lib/domain/period";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
+import { moneyInWords } from "@/lib/domain/money-words";
 
 type ExpenseCategory = FishingExpenseCategory | HomeExpenseCategory;
 

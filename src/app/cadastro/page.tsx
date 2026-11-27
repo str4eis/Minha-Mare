@@ -3,14 +3,14 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import AuthPageShell from "@/components/AuthPageShell";
-import { mapAuthError } from "@/lib/auth-errors";
+import AuthPageShell from "@/components/ui/AuthPageShell";
+import { mapAuthError } from "@/lib/auth/auth-errors";
 import {
   isValidEmail,
   isValidFullName,
   isValidPassword,
   passwordsMatch,
-} from "@/lib/auth-validation";
+} from "@/lib/auth/auth-validation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CadastroPage() {

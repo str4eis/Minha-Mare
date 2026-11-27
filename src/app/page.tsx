@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import LegalLinks from "@/components/LegalLinks";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
+import LegalLinks from "@/components/ui/LegalLinks";
+import GoogleSignInButton from "@/components/ui/GoogleSignInButton";
 
 export default function WelcomePage() {
   return (

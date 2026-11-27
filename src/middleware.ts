@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isAuthPath, isProtectedPath } from "@/lib/auth-routes";
+import { isAuthPath, isProtectedPath } from "@/lib/auth/auth-routes";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/database.types";
 

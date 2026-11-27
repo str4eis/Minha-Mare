@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
-import LegalLinks from "@/components/LegalLinks";
+import LegalLinks from "@/components/ui/LegalLinks";
 
 interface AuthPageShellProps {
   title: string;

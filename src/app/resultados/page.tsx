@@ -9,12 +9,12 @@ import {
   Home as House,
   Ship,
 } from "lucide-react";
-import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
-import DataStatus from "@/components/DataStatus";
+import Header from "@/components/layout/Header";
+import BottomNav from "@/components/layout/BottomNav";
+import DataStatus from "@/components/ui/DataStatus";
 import { useStore } from "@/lib/store";
-import { formatBRL, currentMonthLabel } from "@/lib/format";
-import { cn } from "@/lib/cn";
+import { formatBRL, currentMonthLabel } from "@/lib/domain/format";
+import { cn } from "@/lib/utils/cn";
 
 export default function ResultadosPage() {
   const { totals, selectedMonth, hydrated, ready } = useStore();

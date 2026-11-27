@@ -5,7 +5,7 @@ import type {
   HomeExpenseCategory,
   Sale,
   SaleCategory,
-} from "./types";
+} from "../domain/types";
 
 export interface LocalImportData {
   sales: Array<Omit<Sale, "id">>;

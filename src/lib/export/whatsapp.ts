@@ -1,4 +1,4 @@
-import { currentMonthLabel, formatBRL } from "./format";
+import { currentMonthLabel, formatBRL } from "../domain/format";
 import type { MonthlyTotals } from "./export-data";
 
 export function createWhatsAppSummary(

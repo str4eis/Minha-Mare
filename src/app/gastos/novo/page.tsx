@@ -2,13 +2,13 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import ExpenseForm from "@/components/ExpenseForm";
-import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
+import ExpenseForm from "@/components/forms/ExpenseForm";
+import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/domain/categories";
 import {
   ExpenseKind,
   FishingExpenseCategory,
   HomeExpenseCategory,
-} from "@/lib/types";
+} from "@/lib/domain/types";
 
 type ExpenseCategory = FishingExpenseCategory | HomeExpenseCategory;
 

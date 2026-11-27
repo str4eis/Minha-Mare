@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mapAuthError } from "./auth-errors";
-import { SupabaseConfigurationError } from "./supabase/config";
+import { SupabaseConfigurationError } from "../supabase/config";
 
 describe("mapAuthError", () => {
   it.each([

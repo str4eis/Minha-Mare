@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import BottomNav from "@/components/BottomNav";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
-import ExpenseForm from "@/components/ExpenseForm";
+import BottomNav from "@/components/layout/BottomNav";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
+import ExpenseForm from "@/components/forms/ExpenseForm";
 import { getExpenseById } from "@/lib/data/expenses";
 import { useStore } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
-import type { Expense } from "@/lib/types";
+import type { Expense } from "@/lib/domain/types";
 
 export default function EditarGastoPage() {
   const { id } = useParams<{ id: string }>();

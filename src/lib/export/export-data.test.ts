@@ -9,7 +9,7 @@ import {
   preparePdfSummaryRows,
   protectSpreadsheetText,
 } from "./export-data";
-import type { Expense, Sale } from "./types";
+import type { Expense, Sale } from "../domain/types";
 
 const totals = {
   totalVendido: 20.3,

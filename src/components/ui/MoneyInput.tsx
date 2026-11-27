@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, type InputHTMLAttributes } from "react";
-import { formatMoneyInput } from "@/lib/format";
+import { formatMoneyInput } from "@/lib/domain/format";
 
 type MoneyInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,

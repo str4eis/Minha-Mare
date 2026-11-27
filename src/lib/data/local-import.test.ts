@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Expense, Sale } from "../types";
+import type { Expense, Sale } from "../domain/types";
 import type { Database } from "../supabase/database.types";
 import { insertImportedExpenses, insertImportedSales } from "./local-import";
 

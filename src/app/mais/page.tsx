@@ -11,17 +11,17 @@ import {
   Target,
   UserRound,
 } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
-import MonthPicker from "@/components/MonthPicker";
+import BottomNav from "@/components/layout/BottomNav";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
+import MonthPicker from "@/components/layout/MonthPicker";
 import { useStore } from "@/lib/store";
-import { formatBRL, currentMonthLabel } from "@/lib/format";
-import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
-import { ExpenseKind } from "@/lib/types";
-import { exportMonthlyExcel } from "@/lib/export-excel";
-import { exportMonthlyPdf } from "@/lib/export-pdf";
-import { createWhatsAppSummary } from "@/lib/whatsapp";
+import { formatBRL, currentMonthLabel } from "@/lib/domain/format";
+import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/domain/categories";
+import { ExpenseKind } from "@/lib/domain/types";
+import { exportMonthlyExcel } from "@/lib/export/export-excel";
+import { exportMonthlyPdf } from "@/lib/export/export-pdf";
+import { createWhatsAppSummary } from "@/lib/export/whatsapp";
 
 export default function MaisPage() {
   const router = useRouter();

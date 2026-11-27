@@ -5,7 +5,7 @@ import {
   preparePdfSummaryRows,
   type MonthlyTotals,
 } from "./export-data";
-import type { Expense, Sale } from "./types";
+import type { Expense, Sale } from "../domain/types";
 import type { jsPDF } from "jspdf";
 import type { default as autoTableType } from "jspdf-autotable";
 

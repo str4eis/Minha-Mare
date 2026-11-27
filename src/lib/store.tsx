@@ -10,8 +10,8 @@ import React, {
   useState,
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { AppState, Expense, Sale } from "./types";
-import { computeTotals, getCurrentMonth, SelectedMonth } from "./period";
+import { AppState, Expense, Sale } from "./domain/types";
+import { computeTotals, getCurrentMonth, SelectedMonth } from "./domain/period";
 import { createClient } from "./supabase/client";
 import {
   deleteExpenseById,
@@ -31,9 +31,9 @@ import {
   restoreExpense,
   restoreSale,
   SaleUpdate,
-} from "./state";
+} from "./domain/state";
 import type { Database } from "./supabase/database.types";
-import { getProfileDisplayName } from "./profile-name";
+import { getProfileDisplayName } from "./domain/profile-name";
 
 interface StoreContextValue {
   state: AppState;

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import LegalLinks from "@/components/LegalLinks";
+import LegalLinks from "@/components/ui/LegalLinks";
 
 interface LegalPageShellProps {
   children: ReactNode;

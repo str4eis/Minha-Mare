@@ -2,9 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import AuthPageShell from "@/components/AuthPageShell";
-import { mapAuthError } from "@/lib/auth-errors";
-import { isValidPassword, passwordsMatch } from "@/lib/auth-validation";
+import AuthPageShell from "@/components/ui/AuthPageShell";
+import { mapAuthError } from "@/lib/auth/auth-errors";
+import { isValidPassword, passwordsMatch } from "@/lib/auth/auth-validation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function RedefinirSenhaPage() {

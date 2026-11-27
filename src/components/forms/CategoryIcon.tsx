@@ -19,7 +19,7 @@ import type { ComponentType } from "react";
 import {
   getCategoryIconName,
   type CategoryIconName,
-} from "@/lib/category-icons";
+} from "@/lib/domain/category-icons";
 
 type IconComponent = ComponentType<LucideProps>;
 type CategoryKind = "venda" | "pesca" | "casa";

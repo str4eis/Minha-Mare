@@ -2,15 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import BottomNav from "@/components/BottomNav";
-import CategoryIcon from "@/components/CategoryIcon";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
+import BottomNav from "@/components/layout/BottomNav";
+import CategoryIcon from "@/components/forms/CategoryIcon";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
 import { useStore } from "@/lib/store";
-import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
-import { saleCategoryMeta } from "@/lib/categories";
-import { filterItems } from "@/lib/filters";
-import { formatSaleUnit } from "@/lib/sale-entry";
+import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
+import { saleCategoryMeta } from "@/lib/domain/categories";
+import { filterItems } from "@/lib/domain/filters";
+import { formatSaleUnit } from "@/lib/domain/sale-entry";
 
 export default function VendasPage() {
   const { state, totals, selectedMonth, hydrated, ready, deleteSale } = useStore();

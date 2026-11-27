@@ -2,13 +2,13 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import BottomNav from "@/components/BottomNav";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
-import MoneyInput from "@/components/MoneyInput";
+import BottomNav from "@/components/layout/BottomNav";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
+import MoneyInput from "@/components/ui/MoneyInput";
 import { useStore } from "@/lib/store";
-import { formatMoneyInput, parseMoneyInput } from "@/lib/format";
-import { validateProfileForm } from "@/lib/profile-validation";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
+import { validateProfileForm } from "@/lib/domain/profile-validation";
 import { createClient } from "@/lib/supabase/client";
 
 function formatAmount(value: number): string {

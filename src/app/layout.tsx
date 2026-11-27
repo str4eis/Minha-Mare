@@ -5,7 +5,7 @@ import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
 import "./globals.css";
 import { StoreProvider } from "@/lib/store";
-import LocalImportPrompt from "@/components/LocalImportPrompt";
+import LocalImportPrompt from "@/components/ui/LocalImportPrompt";
 
 export const metadata: Metadata = {
   title: "Minha Maré",

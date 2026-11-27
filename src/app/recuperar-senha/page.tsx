@@ -2,8 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import AuthPageShell from "@/components/AuthPageShell";
-import { isValidEmail } from "@/lib/auth-validation";
+import AuthPageShell from "@/components/ui/AuthPageShell";
+import { isValidEmail } from "@/lib/auth/auth-validation";
 import { createClient } from "@/lib/supabase/client";
 import { SupabaseConfigurationError } from "@/lib/supabase/config";
 

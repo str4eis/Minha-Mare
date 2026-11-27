@@ -4,7 +4,7 @@ import {
   type MonthlyExportData,
   type MonthlyTotals,
 } from "./export-data";
-import type { Expense, Sale } from "./types";
+import type { Expense, Sale } from "../domain/types";
 import type { Workbook } from "exceljs";
 
 const currencyFormat = '"R$" #,##0.00;[Red]-"R$" #,##0.00';

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import LegalPageShell from "@/components/LegalPageShell";
-import { CONTACT_EMAIL, LEGAL_UPDATED_AT } from "@/lib/legal";
+import LegalPageShell from "@/components/ui/LegalPageShell";
+import { CONTACT_EMAIL, LEGAL_UPDATED_AT } from "@/lib/utils/legal";
 
 export const metadata: Metadata = {
   title: "Termos de Uso | Minha Maré",

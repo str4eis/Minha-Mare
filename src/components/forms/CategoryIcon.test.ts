@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCategoryIconName } from "../lib/category-icons";
+import { getCategoryIconName } from "../../lib/domain/category-icons";
 
 const knownCategoryIds = [
   "ostra",

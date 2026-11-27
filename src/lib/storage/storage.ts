@@ -6,7 +6,7 @@ import {
   HomeExpenseCategory,
   Sale,
   SaleCategory,
-} from "./types";
+} from "../domain/types";
 
 export const STORAGE_KEY = "minha-mare:v1";
 export const STORAGE_BACKUP_KEY = "minha-mare:v1:backup";

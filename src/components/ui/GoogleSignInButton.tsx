@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { safeNextPath } from "@/lib/auth-routes";
-import { isEmbeddedBrowser, mapOAuthError } from "@/lib/oauth";
+import { safeNextPath } from "@/lib/auth/auth-routes";
+import { isEmbeddedBrowser, mapOAuthError } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/client";
 
 interface GoogleSignInButtonProps {

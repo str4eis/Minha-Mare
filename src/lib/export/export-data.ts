@@ -2,10 +2,10 @@ import {
   fishingExpenseMeta,
   homeExpenseMeta,
   saleCategoryMeta,
-} from "./categories";
-import { currentMonthLabel, formatBRL } from "./format";
-import { formatSaleUnit } from "./sale-entry";
-import type { Expense, Sale } from "./types";
+} from "../domain/categories";
+import { currentMonthLabel, formatBRL } from "../domain/format";
+import { formatSaleUnit } from "../domain/sale-entry";
+import type { Expense, Sale } from "../domain/types";
 
 export interface MonthlyTotals {
   totalVendido: number;

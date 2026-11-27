@@ -3,16 +3,16 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import BottomNav from "@/components/BottomNav";
-import CategoryIcon from "@/components/CategoryIcon";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
+import BottomNav from "@/components/layout/BottomNav";
+import CategoryIcon from "@/components/forms/CategoryIcon";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
 import { useStore } from "@/lib/store";
-import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
-import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
-import { Expense, ExpenseKind } from "@/lib/types";
-import { cn } from "@/lib/cn";
-import { filterItems } from "@/lib/filters";
+import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
+import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/domain/categories";
+import { Expense, ExpenseKind } from "@/lib/domain/types";
+import { cn } from "@/lib/utils/cn";
+import { filterItems } from "@/lib/domain/filters";
 
 function GastosContent() {
   const params = useSearchParams();

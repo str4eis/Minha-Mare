@@ -2,8 +2,8 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { currentMonthLabel } from "@/lib/format";
-import { getCurrentMonth } from "@/lib/period";
+import { currentMonthLabel } from "@/lib/domain/format";
+import { getCurrentMonth } from "@/lib/domain/period";
 
 export default function MonthPicker() {
   const { hydrated, selectedMonth, changeMonth } = useStore();

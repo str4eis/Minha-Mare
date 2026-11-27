@@ -7,13 +7,13 @@ import {
   CircleAlert,
   CircleCheck,
 } from "lucide-react";
-import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
-import DataStatus from "@/components/DataStatus";
-import CategoryIcon from "@/components/CategoryIcon";
+import Header from "@/components/layout/Header";
+import BottomNav from "@/components/layout/BottomNav";
+import DataStatus from "@/components/ui/DataStatus";
+import CategoryIcon from "@/components/forms/CategoryIcon";
 import { useStore } from "@/lib/store";
-import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
-import { saleCategoryMeta } from "@/lib/categories";
+import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
+import { saleCategoryMeta } from "@/lib/domain/categories";
 
 export default function HomePage() {
   const { state, totals, selectedMonth, hydrated, ready } = useStore();

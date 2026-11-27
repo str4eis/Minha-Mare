@@ -6,7 +6,7 @@ import {
   STORAGE_BACKUP_KEY,
   STORAGE_KEY,
 } from "./storage";
-import { Expense, Sale } from "./types";
+import { Expense, Sale } from "../domain/types";
 
 const sampleSale: Sale = {
   id: "s1",

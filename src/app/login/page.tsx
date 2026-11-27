@@ -3,13 +3,13 @@
 import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import AuthPageShell from "@/components/AuthPageShell";
-import { mapAuthError } from "@/lib/auth-errors";
-import { isValidEmail } from "@/lib/auth-validation";
-import { safeNextPath } from "@/lib/auth-routes";
-import { mapOAuthError } from "@/lib/oauth";
+import AuthPageShell from "@/components/ui/AuthPageShell";
+import { mapAuthError } from "@/lib/auth/auth-errors";
+import { isValidEmail } from "@/lib/auth/auth-validation";
+import { safeNextPath } from "@/lib/auth/auth-routes";
+import { mapOAuthError } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/client";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
+import GoogleSignInButton from "@/components/ui/GoogleSignInButton";
 
 function LoginForm() {
   const router = useRouter();

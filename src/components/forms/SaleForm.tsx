@@ -3,27 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, Minus, Plus } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import CategoryIcon from "@/components/CategoryIcon";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
-import MoneyInput from "@/components/MoneyInput";
+import BottomNav from "@/components/layout/BottomNav";
+import CategoryIcon from "@/components/forms/CategoryIcon";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
+import MoneyInput from "@/components/ui/MoneyInput";
 import { useStore } from "@/lib/store";
-import { saleCategoryMeta } from "@/lib/categories";
-import { cn } from "@/lib/cn";
-import { dateInputToISO, isoToDateInput } from "@/lib/period";
-import { formatMoneyInput, parseMoneyInput } from "@/lib/format";
-import { moneyInWords } from "@/lib/money-words";
+import { saleCategoryMeta } from "@/lib/domain/categories";
+import { cn } from "@/lib/utils/cn";
+import { dateInputToISO, isoToDateInput } from "@/lib/domain/period";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
+import { moneyInWords } from "@/lib/domain/money-words";
 import {
   formatQuantityInput,
   formatSaleUnit,
   getDefaultSaleUnit,
   parseQuantityInput,
   suggestLastSalePrice,
-} from "@/lib/sale-entry";
+} from "@/lib/domain/sale-entry";
 import { getLatestSale, getLatestSaleForCategory } from "@/lib/data/sales";
 import { createClient } from "@/lib/supabase/client";
-import { Sale, SaleCategory } from "@/lib/types";
+import { Sale, SaleCategory } from "@/lib/domain/types";
 
 const categories: SaleCategory[] = [
   "ostra",

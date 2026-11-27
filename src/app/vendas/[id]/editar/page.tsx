@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import BottomNav from "@/components/BottomNav";
-import DataStatus from "@/components/DataStatus";
-import Header from "@/components/Header";
-import SaleForm from "@/components/SaleForm";
+import BottomNav from "@/components/layout/BottomNav";
+import DataStatus from "@/components/ui/DataStatus";
+import Header from "@/components/layout/Header";
+import SaleForm from "@/components/forms/SaleForm";
 import { getSaleById } from "@/lib/data/sales";
 import { useStore } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
-import type { Sale } from "@/lib/types";
+import type { Sale } from "@/lib/domain/types";
 
 export default function EditarVendaPage() {
   const { id } = useParams<{ id: string }>();

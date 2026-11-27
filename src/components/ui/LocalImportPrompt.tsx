@@ -9,10 +9,10 @@ import {
   hasImportableLocalData,
   LocalImportData,
   parseLocalImport,
-} from "@/lib/local-import";
+} from "@/lib/storage/local-import";
 import { useStore } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
-import { STORAGE_KEY } from "@/lib/storage";
+import { STORAGE_KEY } from "@/lib/storage/storage";
 
 interface ImportPromptState {
   raw: string;

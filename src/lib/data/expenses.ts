@@ -1,5 +1,5 @@
-import { getMonthRange } from "../period";
-import type { Expense } from "../types";
+import { getMonthRange } from "../domain/period";
+import type { Expense } from "../domain/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../supabase/database.types";
 import { mapExpenseRow, toExpenseInsert } from "./mappers";

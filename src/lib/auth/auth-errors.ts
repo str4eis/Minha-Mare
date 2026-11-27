@@ -1,4 +1,4 @@
-import { SupabaseConfigurationError } from "./supabase/config";
+import { SupabaseConfigurationError } from "../supabase/config";
 
 export interface AuthErrorLike {
   code?: string | null;
