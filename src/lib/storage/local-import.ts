@@ -130,12 +130,16 @@ function parseSale(value: unknown): Omit<Sale, "id"> | null {
 }
 
 function parseExpense(value: unknown): Omit<Expense, "id"> | null {
+  const customDescription = isRecord(value)
+    ? (value.customDescription ?? null)
+    : null;
   if (
     !isRecord(value) ||
     typeof value.id !== "string" ||
     !value.id ||
     (value.kind !== "pesca" && value.kind !== "casa") ||
     typeof value.category !== "string" ||
+    (customDescription !== null && typeof customDescription !== "string") ||
     typeof value.description !== "string" ||
     !isPositiveFiniteNumber(value.value) ||
     !isValidDate(value.date)
@@ -153,6 +157,7 @@ function parseExpense(value: unknown): Omit<Expense, "id"> | null {
   return {
     kind,
     category: value.category as Expense["category"],
+    customDescription,
     description: value.description,
     value: value.value,
     date: value.date,

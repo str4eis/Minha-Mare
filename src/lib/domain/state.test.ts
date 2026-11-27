@@ -26,6 +26,7 @@ const expense: Expense = {
   id: "e-existing",
   kind: "pesca",
   category: "gelo",
+  customDescription: null,
   description: "Gelo",
   value: 5,
   date: "2026-02-12T15:00:00.000Z",
@@ -95,6 +96,7 @@ describe("expense state operations", () => {
     const result = updateExpense(initialState, expense.id, {
       kind: expense.kind,
       category: expense.category,
+      customDescription: expense.customDescription,
       description: "Novo gelo",
       value: expense.value,
       date: "2026-02-13T15:00:00.000Z",
@@ -164,6 +166,7 @@ describe("state operation validation", () => {
       updateExpense(initialState, expense.id, {
         kind: expense.kind,
         category: expense.category,
+        customDescription: expense.customDescription,
         description: expense.description,
         value: expense.value,
         date: "2026-02-30",

@@ -9,7 +9,11 @@ import DataStatus from "@/components/ui/DataStatus";
 import Header from "@/components/layout/Header";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
-import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/domain/categories";
+import {
+  fishingExpenseMeta,
+  getExpenseCategoryLabel,
+  homeExpenseMeta,
+} from "@/lib/domain/categories";
 import { Expense, ExpenseKind } from "@/lib/domain/types";
 import { cn } from "@/lib/utils/cn";
 import { filterItems } from "@/lib/domain/filters";
@@ -44,7 +48,14 @@ function GastosContent() {
       state.expenses.filter((expense) => expense.kind === tab),
       selectedMonth.year,
       selectedMonth.month,
-      { getSearchText: (expense) => expense.description }
+      {
+        getSearchText: (expense) =>
+          `${expense.description} ${getExpenseCategoryLabel(
+            expense.kind,
+            expense.category,
+            expense.customDescription
+          )}`,
+      }
     ).forEach((expense) =>
       map.set(
         expense.category,
@@ -63,7 +74,12 @@ function GastosContent() {
         {
           query,
           category: categoryFilter || undefined,
-          getSearchText: (expense) => expense.description,
+          getSearchText: (expense) =>
+            `${expense.description} ${getExpenseCategoryLabel(
+              expense.kind,
+              expense.category,
+              expense.customDescription
+            )}`,
         }
       ).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)),
     [state.expenses, selectedMonth, tab, query, categoryFilter]
@@ -208,7 +224,6 @@ function GastosContent() {
           )}
           {ready &&
             sortedExpenses.map((expense) => {
-              const categoryMeta = meta[expense.category as keyof typeof meta];
               return (
                 <li key={expense.id} className="py-3 flex items-center gap-3">
                   <CategoryIcon category={expense.category} kind={tab} size="sm" />
@@ -217,7 +232,12 @@ function GastosContent() {
                       {expense.description}
                     </p>
                     <p className="text-base text-mare-slate">
-                      {categoryMeta?.label ?? expense.category} ·{" "}
+                      {getExpenseCategoryLabel(
+                        expense.kind,
+                        expense.category,
+                        expense.customDescription
+                      )}{" "}
+                      ·{" "}
                       {formatDateShort(expense.date)}
                     </p>
                   </div>

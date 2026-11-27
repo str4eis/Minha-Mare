@@ -30,6 +30,7 @@ const sampleExpense: Expense = {
   id: "e1",
   kind: "pesca",
   category: "gelo",
+  customDescription: null,
   description: "Despesa de exemplo",
   value: 5,
   date: "2025-12-11T12:00:00.000Z",
@@ -88,6 +89,27 @@ describe("migrateStoredState", () => {
     expect(result.discarded).toBe(0);
     expect(result.state.sales).toEqual([realSale]);
     expect(result.state.expenses).toEqual([realExpense]);
+  });
+
+  it("keeps custom expense descriptions and fills the field for old records", () => {
+    const customExpense: Expense = {
+      ...realExpense,
+      id: "e-custom",
+      category: "outros",
+      customDescription: "Conserto da rede",
+    };
+    const legacyExpense = { ...realExpense } as Record<string, unknown>;
+    delete legacyExpense.customDescription;
+    const result = migrateStoredState(
+      storedState({ expenses: [customExpense, legacyExpense] })
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.discarded).toBe(0);
+    expect(result.state.expenses).toEqual([
+      customExpense,
+      { ...realExpense, customDescription: null },
+    ]);
   });
 
   it("keeps valid real data and non-default profile values", () => {

@@ -34,6 +34,7 @@ const expense: Expense = {
   id: "e1",
   kind: "casa",
   category: "alimentacao",
+  customDescription: null,
   description: "@SUM(A1:A2)",
   value: 5.3,
   date: "2026-11-02T15:00:00.000Z",
@@ -111,6 +112,29 @@ describe("export data preparation", () => {
 
     expect(data.sales[0].category).toBe("Outro — Siri");
     expect(preparePdfSalesRows(data)[0][1]).toBe("Outro — Siri");
+  });
+
+  it("uses a custom expense description in Excel and PDF rows", () => {
+    const data = prepareMonthlyExportData(
+      [],
+      [
+        { ...expense, category: "outros", customDescription: "Conserto da rede" },
+        { ...expense, id: "e2", category: "outros", customDescription: null },
+      ],
+      totals,
+      2026,
+      11
+    );
+
+    expect(data.expenses.map((row) => row.category)).toEqual([
+      "Outro — Conserto da rede",
+      "Outro",
+    ]);
+    expect(preparePdfExpenseRows(data).map((row) => row[2])).toEqual([
+      "Outro — Conserto da rede",
+      "Outro",
+      "",
+    ]);
   });
 
   it("prepares empty tables without altering the selected month", () => {

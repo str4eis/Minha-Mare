@@ -78,6 +78,7 @@ export interface Database {
           user_id: string;
           kind: string;
           category: string;
+          custom_description: string | null;
           description: string;
           value: number;
           occurred_at: string;
@@ -88,6 +89,7 @@ export interface Database {
           user_id?: string;
           kind: string;
           category: string;
+          custom_description?: string | null;
           description?: string;
           value: number;
           occurred_at: string;
@@ -98,6 +100,7 @@ export interface Database {
           user_id?: string;
           kind?: string;
           category?: string;
+          custom_description?: string | null;
           description?: string;
           value?: number;
           occurred_at?: string;

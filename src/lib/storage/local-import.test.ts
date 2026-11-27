@@ -48,12 +48,34 @@ describe("parseLocalImport", () => {
 
     expect(result).toMatchObject({
       sales: [{ buyer: "Restaurante do Mar" }],
-      expenses: [{ description: "Gelo para conservação" }],
+      expenses: [
+        { description: "Gelo para conservação", customDescription: null },
+      ],
       ignoredCount: 0,
       candidateCount: 2,
     });
     if (!result) throw new Error("Expected parsed local data");
     expect(hasImportableLocalData(result)).toBe(true);
+  });
+
+  it("imports a custom description for Other expenses", () => {
+    const customExpense = {
+      ...realExpense,
+      id: "e1770000000001",
+      category: "outros",
+      customDescription: "Conserto da rede",
+    };
+    const result = parseLocalImport(
+      JSON.stringify({
+        sales: [],
+        expenses: [realExpense, customExpense],
+      })
+    );
+
+    expect(result?.expenses).toMatchObject([
+      { category: "gelo", customDescription: null },
+      { category: "outros", customDescription: "Conserto da rede" },
+    ]);
   });
 
   it("imports shrimp and liter sales while keeping legacy sales without a name", () => {

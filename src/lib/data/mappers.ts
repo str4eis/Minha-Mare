@@ -110,6 +110,7 @@ export function mapSaleRow(value: unknown): Sale {
 export function mapExpenseRow(value: unknown): Expense {
   if (!isRecord(value)) throw new TypeError("Gasto recebido em formato inválido.");
   const amount = finitePositiveNumber(value.value);
+  const customDescription = value.custom_description ?? null;
   const kind =
     value.kind === "pesca" || value.kind === "casa" ? value.kind : null;
   const categorySet =
@@ -126,6 +127,7 @@ export function mapExpenseRow(value: unknown): Expense {
     categorySet === null ||
     typeof value.category !== "string" ||
     !categorySet.has(value.category) ||
+    (customDescription !== null && typeof customDescription !== "string") ||
     typeof value.description !== "string" ||
     amount === null ||
     !validDate(value.occurred_at)
@@ -137,6 +139,7 @@ export function mapExpenseRow(value: unknown): Expense {
     id: value.id,
     kind,
     category: value.category as Expense["category"],
+    customDescription,
     description: value.description,
     value: amount,
     date: value.occurred_at,
@@ -191,6 +194,7 @@ export function toExpenseInsert(
     ...(id ? { id } : {}),
     kind: expense.kind,
     category: expense.category,
+    custom_description: expense.customDescription,
     description: expense.description,
     value: expense.value,
     occurred_at: expense.date,

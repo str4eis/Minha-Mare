@@ -1,14 +1,15 @@
 import { currentMonthLabel, formatBRL } from "../domain/format";
-import { getSaleProductLabel } from "../domain/categories";
+import { getExpenseCategoryLabel, getSaleProductLabel } from "../domain/categories";
 import { formatSaleUnit } from "../domain/sale-entry";
-import type { Sale } from "../domain/types";
+import type { Expense, Sale } from "../domain/types";
 import type { MonthlyTotals } from "./export-data";
 
 export function createWhatsAppSummary(
   year: number,
   month: number,
   totals: MonthlyTotals,
-  sales: Sale[] = []
+  sales: Sale[] = [],
+  expenses: Expense[] = []
 ): string {
   const salesText = sales.length
     ? `\n\nVendas:\n${sales
@@ -27,6 +28,18 @@ export function createWhatsAppSummary(
         })
         .join("\n")}`
     : "";
+  const expensesText = expenses.length
+    ? `\n\nGastos:\n${expenses
+        .map(
+          (expense) =>
+            `- ${getExpenseCategoryLabel(
+              expense.kind,
+              expense.category,
+              expense.customDescription
+            )}: ${formatBRL(expense.value)}`
+        )
+        .join("\n")}`
+    : "";
 
   return (
     `Minha Maré — ${currentMonthLabel(year, month)}\n` +
@@ -35,6 +48,7 @@ export function createWhatsAppSummary(
     `Saiu em casa: ${formatBRL(totals.totalGastosCasa)}\n` +
     `Saiu no total: ${formatBRL(totals.totalGastos)}\n` +
     `Sobrou: ${formatBRL(totals.resultado)}` +
-    salesText
+    salesText +
+    expensesText
   );
 }

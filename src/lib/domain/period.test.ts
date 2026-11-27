@@ -102,6 +102,7 @@ describe("computeTotals", () => {
       id: `expense-${kind}-${value}`,
       kind,
       category: kind === "pesca" ? "gelo" : "moradia",
+      customDescription: null,
       description: "Despesa",
       value,
       date: "2025-12-10T12:00:00.000Z",

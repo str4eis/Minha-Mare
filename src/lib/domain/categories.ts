@@ -1,4 +1,5 @@
 import {
+  ExpenseKind,
   FishingExpenseCategory,
   HomeExpenseCategory,
   SaleCategory,
@@ -22,6 +23,20 @@ export function getSaleProductLabel(
   const productName = customProduct?.trim();
   return category === "outros" && productName
     ? `${label} — ${productName}`
+    : label;
+}
+
+export function getExpenseCategoryLabel(
+  kind: ExpenseKind,
+  category: FishingExpenseCategory | HomeExpenseCategory,
+  customDescription: string | null = null
+): string {
+  const categories = kind === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
+  const label =
+    categories[category as keyof typeof categories]?.label ?? category;
+  const details = customDescription?.trim();
+  return category === "outros" && details
+    ? `${label} — ${details}`
     : label;
 }
 

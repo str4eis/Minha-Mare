@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, Home, Ship } from "lucide-react";
+import { CircleCheck, Home, Mic, Ship } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import DataStatus from "@/components/ui/DataStatus";
@@ -21,6 +21,11 @@ import { cn } from "@/lib/utils/cn";
 import { dateInputToISO, isoToDateInput } from "@/lib/domain/period";
 import { formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
 import { moneyInWords } from "@/lib/domain/money-words";
+import {
+  isSpeechRecognitionSupported,
+  startSpeechRecognition,
+  type SpeechRecognitionSession,
+} from "@/lib/audio/speech-input";
 
 type ExpenseCategory = FishingExpenseCategory | HomeExpenseCategory;
 
@@ -51,6 +56,12 @@ export default function ExpenseForm({
         ? initialCategory
         : categories[0])
   );
+  const [customDescription, setCustomDescription] = useState(
+    expense?.customDescription ?? ""
+  );
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [speechError, setSpeechError] = useState("");
   const [description, setDescription] = useState(expense?.description ?? "");
   const [value, setValue] = useState(
     expense ? formatMoneyInput(expense.value.toFixed(2)) : ""
@@ -60,6 +71,15 @@ export default function ExpenseForm({
   const [dateError, setDateError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saving, setSaving] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
+
+  useEffect(() => {
+    setSpeechSupported(isSpeechRecognitionSupported());
+    return () => {
+      recognitionRef.current?.cancel();
+      recognitionRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const todayDate = isoToDateInput(new Date().toISOString());
@@ -89,6 +109,8 @@ export default function ExpenseForm({
     const expenseData = {
       kind,
       category,
+      customDescription:
+        category === "outros" ? customDescription.trim() || null : null,
       description: description.trim() || meta[category as keyof typeof meta].label,
       value: numericValue,
       date: occurredAt,
@@ -112,9 +134,50 @@ export default function ExpenseForm({
   };
 
   const chooseKind = (nextKind: ExpenseKind) => {
+    recognitionRef.current?.cancel();
+    recognitionRef.current = null;
+    setListening(false);
+    setSpeechError("");
+    setCustomDescription("");
     setKind(nextKind);
     setCategory(getExpenseCategories(nextKind)[0]);
     setDescription("");
+  };
+
+  const chooseCategory = (nextCategory: ExpenseCategory) => {
+    if (nextCategory !== "outros") {
+      recognitionRef.current?.cancel();
+      recognitionRef.current = null;
+      setListening(false);
+      setCustomDescription("");
+    }
+    setSpeechError("");
+    setCategory(nextCategory);
+  };
+
+  const toggleSpeechInput = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    setSpeechError("");
+    recognitionRef.current?.cancel();
+    recognitionRef.current = null;
+    const session = startSpeechRecognition({
+      onTranscript: setCustomDescription,
+      onError: setSpeechError,
+      onEnd: () => {
+        recognitionRef.current = null;
+        setListening(false);
+      },
+    });
+
+    if (session) {
+      recognitionRef.current = session;
+      setListening(true);
+    }
   };
 
   return (
@@ -166,7 +229,7 @@ export default function ExpenseForm({
               <button
                 key={currentCategory}
                 type="button"
-                onClick={() => setCategory(currentCategory)}
+                onClick={() => chooseCategory(currentCategory)}
                 aria-pressed={active}
                 className={cn(
                   "flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl2 border px-2 py-3 transition-colors",
@@ -183,6 +246,40 @@ export default function ExpenseForm({
             );
           })}
         </div>
+
+        {category === "outros" && (
+          <div className="mt-4 rounded-xl2 bg-mare-card p-4">
+            <label
+              htmlFor="expense-custom-description"
+              className="text-lg font-semibold text-mare-institutional"
+            >
+              Com o que você gastou?
+            </label>
+            <p className="mt-1 text-lg text-mare-slate">Opcional.</p>
+            <input
+              id="expense-custom-description"
+              value={customDescription}
+              onChange={(event) => setCustomDescription(event.target.value)}
+              className="mt-2 min-h-14 w-full rounded-xl2 border border-black/10 bg-white px-3 text-lg focus:outline-none"
+            />
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={toggleSpeechInput}
+                aria-pressed={listening}
+                className="mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-mare-institutional px-4 text-lg font-semibold text-white"
+              >
+                <Mic className="h-5 w-5" aria-hidden="true" />
+                {listening ? "Ouvindo..." : "Falar"}
+              </button>
+            )}
+            {speechError && (
+              <p className="mt-2 text-lg text-mare-negative" role="alert">
+                {speechError}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="mt-4 rounded-xl2 bg-mare-card p-4">
           <label htmlFor="expense-value" className="text-lg font-semibold">
@@ -207,11 +304,13 @@ export default function ExpenseForm({
             <div className="mt-3">
               <SpeakButton
                 label="Ouvir valor"
-                text={`Categoria: ${meta[
-                  category as keyof typeof meta
-                ].label}. Valor total: ${moneyInWords(
-                  numericValue
-                )}.`}
+                text={
+                  category === "outros" && customDescription.trim()
+                    ? `${customDescription.trim()}, ${moneyInWords(numericValue)}.`
+                    : `Categoria: ${
+                        meta[category as keyof typeof meta].label
+                      }. Valor total: ${moneyInWords(numericValue)}.`
+                }
               />
             </div>
           )}

@@ -1,7 +1,6 @@
 import {
-  fishingExpenseMeta,
+  getExpenseCategoryLabel,
   getSaleProductLabel,
-  homeExpenseMeta,
 } from "../domain/categories";
 import { currentMonthLabel, formatBRL } from "../domain/format";
 import { formatSaleUnit } from "../domain/sale-entry";
@@ -149,10 +148,11 @@ export function prepareMonthlyExportData(
       date: excelDateInRecife(expense.date),
       dateLabel: formatExportDate(expense.date),
       kind: expense.kind === "pesca" ? "Trabalho" : "Casa",
-      category:
-        expense.kind === "pesca"
-          ? fishingExpenseMeta[expense.category as keyof typeof fishingExpenseMeta].label
-          : homeExpenseMeta[expense.category as keyof typeof homeExpenseMeta].label,
+      category: getExpenseCategoryLabel(
+        expense.kind,
+        expense.category,
+        expense.customDescription
+      ),
       description: expense.description,
       value: expense.value,
     })),

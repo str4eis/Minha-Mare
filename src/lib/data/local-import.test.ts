@@ -20,6 +20,7 @@ const expenses: Array<Omit<Expense, "id">> = [
   {
     kind: "pesca",
     category: "gelo",
+    customDescription: null,
     description: "Gelo",
     value: 10,
     date: "2026-03-01T12:00:00.000Z",

@@ -114,11 +114,13 @@ function migrateSale(value: unknown): Sale | null {
 
 function migrateExpense(value: unknown): Expense | null {
   if (!isRecord(value)) return null;
+  const customDescription = value.customDescription ?? null;
   if (
     typeof value.id !== "string" ||
     value.id.length === 0 ||
     (value.kind !== "pesca" && value.kind !== "casa") ||
     typeof value.category !== "string" ||
+    (customDescription !== null && typeof customDescription !== "string") ||
     typeof value.description !== "string" ||
     !isPositiveFiniteNumber(value.value) ||
     !isValidDate(value.date)
@@ -137,6 +139,7 @@ function migrateExpense(value: unknown): Expense | null {
     id: value.id,
     kind,
     category: value.category as Expense["category"],
+    customDescription,
     description: value.description,
     value: value.value,
     date: value.date,

@@ -41,6 +41,7 @@ export interface Expense {
   id: string;
   kind: ExpenseKind;
   category: FishingExpenseCategory | HomeExpenseCategory;
+  customDescription: string | null;
   description: string;
   value: number;
   date: string; // ISO string

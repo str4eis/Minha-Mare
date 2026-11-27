@@ -46,7 +46,8 @@ export default function MaisPage() {
         selectedMonth.year,
         selectedMonth.month,
         totals,
-        state.sales
+        state.sales,
+        state.expenses
       )
     : "";
 

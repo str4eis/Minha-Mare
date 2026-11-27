@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Sale } from "../domain/types";
+import type { Expense, Sale } from "../domain/types";
 import { createWhatsAppSummary } from "./whatsapp";
 
 describe("createWhatsAppSummary", () => {
@@ -48,5 +48,46 @@ describe("createWhatsAppSummary", () => {
     );
 
     expect(summary).toContain("Vendas:\n- Outro — Siri: 2 quilos — R$ 40,00");
+  });
+
+  it("includes custom and empty Other expense descriptions", () => {
+    const expenses: Expense[] = [
+      {
+        id: "custom-expense",
+        kind: "pesca",
+        category: "outros",
+        customDescription: "Conserto da rede",
+        description: "Outro",
+        value: 25,
+        date: "2026-11-10T12:00:00.000Z",
+      },
+      {
+        id: "other-expense",
+        kind: "casa",
+        category: "outros",
+        customDescription: null,
+        description: "Outro",
+        value: 5,
+        date: "2026-11-11T12:00:00.000Z",
+      },
+    ];
+
+    const summary = createWhatsAppSummary(
+      2026,
+      11,
+      {
+        totalVendido: 0,
+        totalGastosPesca: 25,
+        totalGastosCasa: 5,
+        totalGastos: 30,
+        resultado: -30,
+      },
+      [],
+      expenses
+    );
+
+    expect(summary).toContain(
+      "Gastos:\n- Outro — Conserto da rede: R$ 25,00\n- Outro: R$ 5,00"
+    );
   });
 });

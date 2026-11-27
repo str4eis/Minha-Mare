@@ -20,6 +20,7 @@ const sale: Omit<Sale, "id"> = {
 const expense: Omit<Expense, "id"> = {
   kind: "pesca",
   category: "gelo",
+  customDescription: null,
   description: "Gelo para a pesca",
   value: 12.75,
   date: "2025-12-11T12:00:00.000Z",
@@ -84,6 +85,31 @@ describe("database mappers", () => {
     });
 
     expect(result).toEqual({ ...expense, id: "expense-id" });
+  });
+
+  it("maps custom expense descriptions and accepts legacy rows without the column", () => {
+    const customExpense: Omit<Expense, "id"> = {
+      ...expense,
+      category: "outros",
+      customDescription: "Conserto da rede",
+    };
+    const insert = toExpenseInsert(customExpense);
+
+    expect(insert.custom_description).toBe("Conserto da rede");
+    expect(
+      mapExpenseRow({
+        ...insert,
+        id: "custom-expense",
+        occurred_at: customExpense.date,
+      })
+    ).toEqual({ ...customExpense, id: "custom-expense" });
+
+    const legacyRow = { ...insert, id: "legacy-expense" };
+    delete (legacyRow as Partial<typeof legacyRow>).custom_description;
+    expect(mapExpenseRow(legacyRow)).toMatchObject({
+      id: "legacy-expense",
+      customDescription: null,
+    });
   });
 
   it("preserves stable IDs for retryable local imports", () => {
