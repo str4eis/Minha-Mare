@@ -59,7 +59,26 @@ function isPositiveFiniteNumber(value: unknown): value is number {
 }
 
 function isValidDate(value: unknown): value is string {
-  return typeof value === "string" && Number.isFinite(Date.parse(value));
+  if (typeof value !== "string" || !Number.isFinite(Date.parse(value))) {
+    return false;
+  }
+
+  const datePart = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!datePart) return true;
+
+  const [, yearText, monthText, dayText] = datePart;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+
+  return (
+    year >= 1 &&
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }
 
 function migrateSale(value: unknown): Sale | null {
@@ -126,14 +145,16 @@ function isNonNegativeFiniteNumber(value: unknown): value is number {
 
 export function migrateStoredState(
   raw: string | null
-): { state: AppState; ok: boolean } {
-  if (raw === null) return { state: createEmptyAppState(), ok: true };
+): { state: AppState; ok: boolean; discarded: number } {
+  if (raw === null) {
+    return { state: createEmptyAppState(), ok: true, discarded: 0 };
+  }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return { state: createEmptyAppState(), ok: false };
+    return { state: createEmptyAppState(), ok: false, discarded: 0 };
   }
 
   if (
@@ -145,15 +166,18 @@ export function migrateStoredState(
     !isNonNegativeFiniteNumber(parsed.metaAposentadoria) ||
     !isNonNegativeFiniteNumber(parsed.poupancaAposentadoria)
   ) {
-    return { state: createEmptyAppState(), ok: false };
+    return { state: createEmptyAppState(), ok: false, discarded: 0 };
   }
 
-  const sales = parsed.sales
-    .map(migrateSale)
+  const migratedSales = parsed.sales.map(migrateSale);
+  const migratedExpenses = parsed.expenses.map(migrateExpense);
+  const discarded =
+    migratedSales.filter((sale) => sale === null).length +
+    migratedExpenses.filter((expense) => expense === null).length;
+  const sales = migratedSales
     .filter((sale): sale is Sale => sale !== null)
     .filter((sale) => !DEMO_SALE_IDS.has(sale.id));
-  const expenses = parsed.expenses
-    .map(migrateExpense)
+  const expenses = migratedExpenses
     .filter((expense): expense is Expense => expense !== null)
     .filter((expense) => !DEMO_EXPENSE_IDS.has(expense.id));
 
@@ -169,7 +193,15 @@ export function migrateStoredState(
         parsed.poupancaAposentadoria === 225 ? 0 : parsed.poupancaAposentadoria,
     },
     ok: true,
+    discarded,
   };
+}
+
+export function shouldPersistStoredState(
+  initialReadOk: boolean | null,
+  hasUserChanges: boolean
+): boolean {
+  return initialReadOk !== null && hasUserChanges;
 }
 
 export function backupCorruptedStoredState(

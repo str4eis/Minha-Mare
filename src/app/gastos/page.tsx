@@ -1,24 +1,32 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
-import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import Header from "@/components/Header";
 import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
-import { ExpenseKind } from "@/lib/types";
+import { Expense, ExpenseKind } from "@/lib/types";
 import { cn } from "@/lib/cn";
-import { filterByMonth } from "@/lib/period";
+import { filterItems } from "@/lib/filters";
 
 function GastosContent() {
   const params = useSearchParams();
-  const initialTab = (params.get("tab") as ExpenseKind) || "pesca";
-  const [tab, setTab] = useState<ExpenseKind>(initialTab);
-  const { state, totals, selectedMonth, hydrated } = useStore();
+  const requestedTab = params.get("tab");
+  const [tab, setTab] = useState<ExpenseKind>(
+    requestedTab === "casa" ? "casa" : "pesca"
+  );
+  const [query, setQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const historyHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const { state, totals, selectedMonth, hydrated, deleteExpense } = useStore();
 
   const meta = tab === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
   const total = tab === "pesca" ? totals.totalGastosPesca : totals.totalGastosCasa;
@@ -28,22 +36,48 @@ function GastosContent() {
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
-    filterByMonth(state.expenses, selectedMonth.year, selectedMonth.month)
-      .filter((e) => e.kind === tab)
-      .forEach((e) =>
-        map.set(e.category, (map.get(e.category) ?? 0) + Math.round(e.value * 100))
-      );
+    filterItems(
+      state.expenses.filter((expense) => expense.kind === tab),
+      selectedMonth.year,
+      selectedMonth.month,
+      { getSearchText: (expense) => expense.description }
+    ).forEach((expense) =>
+      map.set(
+        expense.category,
+        (map.get(expense.category) ?? 0) + Math.round(expense.value * 100)
+      )
+    );
     return map;
   }, [state.expenses, selectedMonth, tab]);
 
-  const recent = useMemo(
+  const sortedExpenses = useMemo(
     () =>
-      filterByMonth(state.expenses, selectedMonth.year, selectedMonth.month)
-        .filter((e) => e.kind === tab)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 8),
-    [state.expenses, selectedMonth, tab]
+      filterItems(
+        state.expenses.filter((expense) => expense.kind === tab),
+        selectedMonth.year,
+        selectedMonth.month,
+        {
+          query,
+          category: categoryFilter || undefined,
+          getSearchText: (expense) => expense.description,
+        }
+      ).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)),
+    [state.expenses, selectedMonth, tab, query, categoryFilter]
   );
+  const hasActiveFilters = query.trim().length > 0 || categoryFilter !== "";
+  const listedTotal =
+    sortedExpenses.reduce(
+      (cents, expense) => cents + Math.round(expense.value * 100),
+      0
+    ) / 100;
+  const categories = Object.entries(meta) as Array<
+    [keyof typeof meta, (typeof meta)[keyof typeof meta]]
+  >;
+
+  const changeTab = (nextTab: ExpenseKind) => {
+    setTab(nextTab);
+    setCategoryFilter("");
+  };
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
@@ -55,19 +89,27 @@ function GastosContent() {
 
         <div className="mt-4 flex rounded-full bg-mare-card p-1">
           <button
-            onClick={() => setTab("pesca")}
+            type="button"
+            onClick={() => changeTab("pesca")}
+            aria-pressed={tab === "pesca"}
             className={cn(
               "flex-1 rounded-full py-2 text-sm font-semibold transition-colors",
-              tab === "pesca" ? "bg-mare-purple text-white shadow-soft" : "text-mare-slate"
+              tab === "pesca"
+                ? "bg-mare-purple text-white shadow-soft"
+                : "text-mare-slate"
             )}
           >
             Gastos da Pesca
           </button>
           <button
-            onClick={() => setTab("casa")}
+            type="button"
+            onClick={() => changeTab("casa")}
+            aria-pressed={tab === "casa"}
             className={cn(
               "flex-1 rounded-full py-2 text-sm font-semibold transition-colors",
-              tab === "casa" ? "bg-mare-purple text-white shadow-soft" : "text-mare-slate"
+              tab === "casa"
+                ? "bg-mare-purple text-white shadow-soft"
+                : "text-mare-slate"
             )}
           >
             Gastos da Casa
@@ -97,21 +139,26 @@ function GastosContent() {
           Categorias {tab === "pesca" ? "de Pesca" : "da Casa"}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">
-          {(Object.keys(meta) as Array<keyof typeof meta>).map((cat) => {
-            const m = meta[cat];
-            const Icon = m.icon;
-            const spent = (byCategory.get(cat as string) ?? 0) / 100;
+          {categories.map(([category, categoryMeta]) => {
+            const Icon = categoryMeta.icon;
+            const spent = (byCategory.get(category) ?? 0) / 100;
             return (
               <Link
-                key={cat as string}
-                href={`/gastos/novo?kind=${tab}&categoria=${cat as string}`}
+                key={category}
+                href={`/gastos/novo?kind=${tab}&categoria=${category}`}
                 className="rounded-xl2 border border-black/5 p-4 flex flex-col gap-3 shadow-card active:scale-[0.98] transition-transform"
               >
                 <Icon className="h-5 w-5 text-mare-purple" />
                 <div>
-                  <p className="font-semibold text-mare-ink text-sm">{m.label}</p>
+                  <p className="font-semibold text-mare-ink text-sm">
+                    {categoryMeta.label}
+                  </p>
                   <p className="text-xs text-mare-slate mt-0.5">
-                    {!hydrated ? "—" : spent > 0 ? formatBRL(spent) : "Adicionar"}
+                    {!hydrated
+                      ? "—"
+                      : spent > 0
+                        ? formatBRL(spent)
+                        : "Adicionar"}
                   </p>
                 </div>
               </Link>
@@ -119,35 +166,121 @@ function GastosContent() {
           })}
         </div>
 
-        <div className="mt-5 flex items-center justify-between">
-          <p className="font-semibold text-mare-ink">Lançamentos recentes</p>
+        <div className="mt-5 rounded-xl2 bg-mare-card px-4 py-3">
+          <label htmlFor="expense-search" className="sr-only">
+            Buscar por descrição
+          </label>
+          <input
+            id="expense-search"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar descrição"
+            className="w-full bg-transparent text-sm placeholder:text-mare-slate focus:outline-none"
+          />
         </div>
+        <div className="mt-3">
+          <label
+            htmlFor="expense-category"
+            className="mb-1 block text-xs font-semibold text-mare-slate"
+          >
+            Filtrar por categoria
+          </label>
+          <select
+            id="expense-category"
+            value={categoryFilter}
+            onChange={(event) => setCategoryFilter(event.target.value)}
+            className="w-full rounded-xl2 border border-black/10 bg-white px-3 py-2 text-sm text-mare-ink"
+          >
+            <option value="">Todas as categorias</option>
+            {categories.map(([category, categoryMeta]) => (
+              <option key={category} value={category}>
+                {categoryMeta.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        {hydrated && hasActiveFilters && (
+          <p className="mt-3 text-sm text-mare-slate">
+            Total listado: {formatBRL(listedTotal)}
+          </p>
+        )}
+
+        <h2
+          ref={historyHeadingRef}
+          tabIndex={-1}
+          className="mt-5 font-semibold text-mare-ink focus:outline-none"
+        >
+          Lançamentos
+        </h2>
         <ul className="mt-2 divide-y divide-black/5">
-          {hydrated && recent.length === 0 && (
+          {hydrated && sortedExpenses.length === 0 && (
             <li className="py-4 text-sm text-mare-slate">
-              Nenhum gasto em {monthLabel}.
+              {hasActiveFilters
+                ? "Nenhum resultado para a busca."
+                : `Nenhum lançamento em ${monthLabel}.`}
             </li>
           )}
-          {hydrated && recent.map((e) => {
-            const m = meta[e.category as keyof typeof meta];
-            const Icon = m?.icon;
-            return (
-              <li key={e.id} className="py-3 flex items-center gap-3">
-                <span className="h-10 w-10 rounded-full bg-mare-card flex items-center justify-center shrink-0">
-                  {Icon && <Icon className="h-5 w-5 text-mare-purple" />}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-mare-ink truncate">{e.description}</p>
-                  <p className="text-xs text-mare-slate">{formatDateShort(e.date)}</p>
-                </div>
-                <span className="font-semibold text-[#B23B5C] whitespace-nowrap">
-                  - {formatBRL(e.value)}
-                </span>
-              </li>
-            );
-          })}
+          {hydrated &&
+            sortedExpenses.map((expense) => {
+              const categoryMeta = meta[expense.category as keyof typeof meta];
+              const Icon = categoryMeta?.icon;
+              return (
+                <li key={expense.id} className="py-3 flex items-center gap-3">
+                  <span className="h-10 w-10 rounded-full bg-mare-card flex items-center justify-center shrink-0">
+                    {Icon && <Icon className="h-5 w-5 text-mare-purple" />}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-mare-ink truncate">
+                      {expense.description}
+                    </p>
+                    <p className="text-xs text-mare-slate">
+                      {formatDateShort(expense.date)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="font-semibold text-[#B23B5C] whitespace-nowrap">
+                      - {formatBRL(expense.value)}
+                    </span>
+                    <div className="flex items-center gap-2 text-xs font-medium">
+                      <Link
+                        href={`/gastos/${encodeURIComponent(expense.id)}/editar`}
+                        aria-label={`Editar gasto: ${expense.description}`}
+                        className="text-mare-purple hover:underline"
+                      >
+                        Editar
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          returnFocusRef.current = event.currentTarget;
+                          setDeletingExpenseId(expense.id);
+                        }}
+                        aria-label={`Excluir gasto: ${expense.description}`}
+                        className="text-[#B23B5C] hover:underline"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
         </ul>
       </main>
+
+      <ConfirmDialog
+        open={deletingExpenseId !== null}
+        title="Excluir gasto?"
+        description="Este lançamento será removido permanentemente."
+        onCancel={() => setDeletingExpenseId(null)}
+        onConfirm={() => {
+          if (deletingExpenseId) deleteExpense(deletingExpenseId);
+          setDeletingExpenseId(null);
+        }}
+        returnFocusRef={returnFocusRef}
+        fallbackFocusRef={historyHeadingRef}
+      />
 
       <Link
         href={`/gastos/novo?kind=${tab}`}

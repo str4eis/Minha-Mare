@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeTotals, filterByMonth, getMonthRange } from "./period";
+import {
+  computeTotals,
+  dateInputToISO,
+  filterByMonth,
+  getMonthRange,
+  isoToDateInput,
+} from "./period";
 import { Expense, Sale } from "./types";
 
 describe("getMonthRange", () => {
@@ -45,6 +51,38 @@ describe("filterByMonth", () => {
 
     expect(() => filterByMonth([valid, invalid], 2025, 12)).not.toThrow();
     expect(filterByMonth([valid, invalid], 2025, 12)).toEqual([valid]);
+  });
+});
+
+describe("dateInputToISO", () => {
+  const now = new Date("2026-02-10T14:37:45.000Z");
+
+  it("preserves the current time when the selected date is today in Recife", () => {
+    expect(dateInputToISO("2026-02-10", now)).toBe("2026-02-10T14:37:45.000Z");
+  });
+
+  it("uses noon in Recife for a past date", () => {
+    expect(dateInputToISO("2026-02-09", now)).toBe("2026-02-09T15:00:00.000Z");
+  });
+
+  it("handles the first and last day of a month", () => {
+    expect(dateInputToISO("2026-02-01", now)).toBe("2026-02-01T15:00:00.000Z");
+    expect(dateInputToISO("2026-01-31", now)).toBe("2026-01-31T15:00:00.000Z");
+  });
+
+  it("rejects future dates, invalid formats, and nonexistent dates", () => {
+    expect(() => dateInputToISO("2026-02-11", now)).toThrow(RangeError);
+    expect(() => dateInputToISO("10/02/2026", now)).toThrow(RangeError);
+    expect(() => dateInputToISO("2026-02-30", now)).toThrow(RangeError);
+  });
+});
+
+describe("isoToDateInput", () => {
+  it("formats the calendar date in Recife and round-trips past dates", () => {
+    expect(isoToDateInput("2026-02-10T02:00:00.000Z")).toBe("2026-02-09");
+
+    const iso = dateInputToISO("2026-02-09", new Date("2026-02-10T14:37:45.000Z"));
+    expect(isoToDateInput(iso)).toBe("2026-02-09");
   });
 });
 
