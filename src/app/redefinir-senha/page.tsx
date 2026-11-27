@@ -77,11 +77,11 @@ export default function RedefinirSenhaPage() {
             className="mt-1 w-full rounded-xl2 border border-black/10 px-4 py-3"
           />
         </div>
-        {error && <p role="alert" className="text-sm text-[#B23B5C]">{error}</p>}
+        {error && <p role="alert" className="text-sm text-mare-negative">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-mare-tealDark py-3.5 font-semibold text-white disabled:opacity-60"
+          className="w-full rounded-full bg-mare-primary py-3.5 font-semibold text-white disabled:opacity-60"
         >
           {submitting ? "Salvando..." : "Salvar nova senha"}
         </button>

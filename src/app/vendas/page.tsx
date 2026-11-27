@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import CategoryIcon from "@/components/CategoryIcon";
 import DataStatus from "@/components/DataStatus";
 import Header from "@/components/Header";
 import MonthPicker from "@/components/MonthPicker";
@@ -48,7 +49,7 @@ export default function VendasPage() {
 
         <div className="mt-4 rounded-xl2 bg-mare-purple text-white p-5 shadow-soft flex items-center justify-between">
           <div>
-            <p className="text-sm text-white/75">Total vendido em {monthLabel}</p>
+            <p className="text-sm text-white">Total vendido em {monthLabel}</p>
             <p className="text-2xl font-semibold mt-1">
               {ready ? formatBRL(totals.totalVendido) : "—"}
             </p>
@@ -98,17 +99,15 @@ export default function VendasPage() {
           )}
           {ready &&
             sortedSales.map((sale) => {
-              const meta = saleCategoryMeta[sale.category];
-              const Icon = meta.icon;
+              const categoryLabel =
+                saleCategoryMeta[sale.category]?.label ?? sale.category;
               return (
                 <li key={sale.id} className="py-3 flex items-center gap-3">
-                  <span className="h-11 w-11 rounded-full bg-mare-tealLight flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-mare-tealDark" />
-                  </span>
+                  <CategoryIcon category={sale.category} kind="venda" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-mare-ink truncate">{sale.buyer}</p>
                     <p className="text-xs text-mare-slate">
-                      {meta.label} · {sale.quantity} {sale.unit} ·{" "}
+                      {categoryLabel} · {sale.quantity} {sale.unit} ·{" "}
                       {formatDateShort(sale.date)}
                     </p>
                   </div>
@@ -131,7 +130,7 @@ export default function VendasPage() {
                           setDeletingSaleId(sale.id);
                         }}
                         aria-label={`Excluir venda de ${sale.buyer}`}
-                        className="text-[#B23B5C] hover:underline"
+                        className="text-mare-negative hover:underline"
                       >
                         Excluir
                       </button>

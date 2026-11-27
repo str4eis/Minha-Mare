@@ -22,7 +22,7 @@ export default function MonthPicker() {
         aria-label="Mês anterior"
         className="flex h-10 w-10 items-center justify-center rounded-full text-mare-purple hover:bg-mare-purpleLight disabled:cursor-not-allowed disabled:opacity-30"
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
       </button>
       <div className="text-center">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-mare-slate">
@@ -41,7 +41,7 @@ export default function MonthPicker() {
         aria-label="Próximo mês"
         className="flex h-10 w-10 items-center justify-center rounded-full text-mare-purple hover:bg-mare-purpleLight disabled:cursor-not-allowed disabled:opacity-30"
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
       </button>
     </div>
   );

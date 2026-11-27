@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import CategoryIcon from "@/components/CategoryIcon";
 import DataStatus from "@/components/DataStatus";
 import Header from "@/components/Header";
 import MonthPicker from "@/components/MonthPicker";
@@ -121,7 +122,7 @@ function GastosContent() {
         <div
           className={cn(
             "mt-4 rounded-xl2 p-5 shadow-card",
-            tab === "pesca" ? "bg-mare-tealLight" : "bg-mare-yellowLight"
+            tab === "pesca" ? "bg-mare-fishingLight" : "bg-mare-homeLight"
           )}
         >
           <p className="text-xs font-semibold tracking-widest uppercase text-mare-slate">
@@ -130,7 +131,7 @@ function GastosContent() {
           <p
             className={cn(
               "mt-1 text-2xl font-semibold",
-              tab === "pesca" ? "text-mare-tealDark" : "text-mare-yellowDark"
+              tab === "pesca" ? "text-mare-positive" : "text-mare-institutional"
             )}
           >
             {ready ? formatBRL(total) : "—"}
@@ -142,7 +143,6 @@ function GastosContent() {
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">
           {categories.map(([category, categoryMeta]) => {
-            const Icon = categoryMeta.icon;
             const spent = (byCategory.get(category) ?? 0) / 100;
             return (
               <Link
@@ -150,7 +150,7 @@ function GastosContent() {
                 href={`/gastos/novo?kind=${tab}&categoria=${category}`}
                 className="rounded-xl2 border border-black/5 p-4 flex flex-col gap-3 shadow-card active:scale-[0.98] transition-transform"
               >
-                <Icon className="h-5 w-5 text-mare-purple" />
+                <CategoryIcon category={category} kind={tab} size="sm" />
                 <div>
                   <p className="font-semibold text-mare-ink text-sm">
                     {categoryMeta.label}
@@ -226,22 +226,20 @@ function GastosContent() {
           {ready &&
             sortedExpenses.map((expense) => {
               const categoryMeta = meta[expense.category as keyof typeof meta];
-              const Icon = categoryMeta?.icon;
               return (
                 <li key={expense.id} className="py-3 flex items-center gap-3">
-                  <span className="h-10 w-10 rounded-full bg-mare-card flex items-center justify-center shrink-0">
-                    {Icon && <Icon className="h-5 w-5 text-mare-purple" />}
-                  </span>
+                  <CategoryIcon category={expense.category} kind={tab} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-mare-ink truncate">
                       {expense.description}
                     </p>
                     <p className="text-xs text-mare-slate">
+                      {categoryMeta?.label ?? expense.category} ·{" "}
                       {formatDateShort(expense.date)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="font-semibold text-[#B23B5C] whitespace-nowrap">
+                    <span className="font-semibold text-mare-negative whitespace-nowrap">
                       - {formatBRL(expense.value)}
                     </span>
                     <div className="flex items-center gap-2 text-xs font-medium">
@@ -259,7 +257,7 @@ function GastosContent() {
                           setDeletingExpenseId(expense.id);
                         }}
                         aria-label={`Excluir gasto: ${expense.description}`}
-                        className="text-[#B23B5C] hover:underline"
+                        className="text-mare-negative hover:underline"
                       >
                         Excluir
                       </button>

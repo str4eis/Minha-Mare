@@ -38,7 +38,7 @@ function drawTableHeading(
     margin: { left: margin, right: margin },
     theme: "grid",
     styles: { font: "helvetica", fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [91, 42, 134], textColor: [255, 255, 255] },
+    headStyles: { fillColor: [126, 34, 206], textColor: [255, 255, 255] },
     rowPageBreak: "avoid",
   });
   return doc.lastAutoTable?.finalY ?? headingY + 24;

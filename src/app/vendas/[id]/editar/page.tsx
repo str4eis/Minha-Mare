@@ -68,7 +68,7 @@ export default function EditarVendaPage() {
           {error ? (
             <DataStatus />
           ) : (
-            <div role="alert" className="text-sm text-[#B23B5C]">
+            <div role="alert" className="text-sm text-mare-negative">
               Não foi possível carregar esta venda.
               <button
                 type="button"

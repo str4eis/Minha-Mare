@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import CategoryIcon from "@/components/CategoryIcon";
 import Header from "@/components/Header";
 import { useStore } from "@/lib/store";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
@@ -111,7 +112,6 @@ export default function ExpenseForm({
         <div className="mt-5 grid grid-cols-3 gap-3">
           {categories.map((currentCategory) => {
             const categoryMeta = meta[currentCategory as keyof typeof meta];
-            const Icon = categoryMeta.icon;
             const active = category === currentCategory;
             return (
               <button
@@ -125,7 +125,7 @@ export default function ExpenseForm({
                     : "bg-mare-card border-transparent text-mare-ink hover:border-mare-purple/30"
                 )}
               >
-                <Icon className={cn("h-6 w-6", active ? "text-white" : "text-mare-purple")} />
+                <CategoryIcon category={currentCategory} kind={kind} />
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-center leading-tight">
                   {categoryMeta.label}
                 </span>
@@ -146,7 +146,7 @@ export default function ExpenseForm({
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Ex: Gasolina do barco"
-            className="mt-2 w-full bg-transparent text-lg placeholder:text-mare-slate/60 focus:outline-none"
+            className="mt-2 w-full bg-transparent text-lg placeholder:text-mare-slate focus:outline-none"
           />
         </div>
 
@@ -169,7 +169,7 @@ export default function ExpenseForm({
             className="mt-2 w-full bg-transparent text-lg text-mare-ink focus:outline-none"
           />
           {dateError && (
-            <p className="mt-2 text-sm text-[#B23B5C]" role="alert">
+            <p className="mt-2 text-sm text-mare-negative" role="alert">
               {dateError}
             </p>
           )}
@@ -190,13 +190,13 @@ export default function ExpenseForm({
               onChange={(event) => setValue(event.target.value)}
               inputMode="decimal"
               placeholder="0,00"
-              className="w-full bg-transparent text-2xl font-semibold placeholder:text-mare-slate/50 focus:outline-none"
+              className="w-full bg-transparent text-2xl font-semibold placeholder:text-mare-slate focus:outline-none"
             />
           </div>
         </div>
 
         {saveError && (
-          <p className="mt-4 text-sm text-[#B23B5C]" role="alert">
+          <p className="mt-4 text-sm text-mare-negative" role="alert">
             {saveError}
           </p>
         )}
@@ -208,11 +208,11 @@ export default function ExpenseForm({
           className={cn(
             "mt-6 w-full flex items-center justify-center gap-2 rounded-full py-4 font-semibold text-white shadow-soft transition-opacity",
             canSave
-              ? "bg-gradient-to-r from-mare-purple to-mare-tealDark active:scale-[0.99]"
+              ? "bg-mare-primary active:scale-[0.99]"
               : "bg-mare-slate/40 cursor-not-allowed"
           )}
         >
-          <CircleCheck className="h-5 w-5" />
+          <CircleCheck className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
           {saving ? "Salvando..." : expense ? "Salvar alterações" : "Salvar Gasto"}
         </button>
       </main>

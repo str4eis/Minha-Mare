@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { UserRound, Waves, X } from "lucide-react";
+import Image from "next/image";
+import { UserRound, X } from "lucide-react";
 
 interface HeaderProps {
   variant?: "profile" | "close";
@@ -10,10 +11,19 @@ interface HeaderProps {
 
 export default function Header({ variant = "profile", closeHref = "/vendas" }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between px-5 pt-6 pb-4">
-      <Link href="/home" className="flex items-center gap-2">
-        <Waves className="h-6 w-6 text-mare-purple" strokeWidth={2.4} />
-        <span className="font-display italic text-[22px] font-semibold text-mare-purple tracking-tight">
+    <header className="flex items-center justify-between bg-white px-5 pb-4 pt-5">
+      <Link href="/home" className="flex min-w-0 items-center gap-2">
+        <span className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center bg-white">
+          <Image
+            src="/logo-reginas.png"
+            alt="Logo do projeto Reginas"
+            width={44}
+            height={44}
+            priority
+            className="h-11 w-11 object-contain"
+          />
+        </span>
+        <span className="truncate font-display text-[20px] font-semibold tracking-tight text-mare-institutional">
           Minha Maré
         </span>
       </Link>
@@ -21,17 +31,17 @@ export default function Header({ variant = "profile", closeHref = "/vendas" }: H
         <Link
           href={closeHref}
           aria-label="Fechar"
-          className="h-9 w-9 rounded-full flex items-center justify-center text-mare-ink hover:bg-mare-card transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-mare-primary transition-colors hover:bg-mare-purpleLight"
         >
-          <X className="h-6 w-6" strokeWidth={1.8} />
+          <X className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
         </Link>
       ) : (
         <Link
           href="/perfil"
           aria-label="Abrir perfil"
-          className="h-9 w-9 rounded-full flex items-center justify-center text-mare-purple hover:bg-mare-purpleLight transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-mare-primary transition-colors hover:bg-mare-purpleLight"
         >
-          <UserRound className="h-6 w-6" strokeWidth={1.8} />
+          <UserRound className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
         </Link>
       )}
     </header>

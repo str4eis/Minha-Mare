@@ -12,6 +12,7 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import MonthPicker from "@/components/MonthPicker";
 import DataStatus from "@/components/DataStatus";
+import CategoryIcon from "@/components/CategoryIcon";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { saleCategoryMeta } from "@/lib/categories";
@@ -70,7 +71,7 @@ export default function HomePage() {
             </div>
             <div>
               <p className="text-xs text-mare-slate">Gastos</p>
-              <p className="mt-0.5 font-semibold text-[#B23B5C]">
+              <p className="mt-0.5 font-semibold text-mare-negative">
                 {ready ? formatBRL(totals.totalGastos) : "—"}
               </p>
             </div>
@@ -83,11 +84,11 @@ export default function HomePage() {
           </div>
           <div
             className={`mt-4 h-2 w-full rounded-full overflow-hidden ${
-              totalActivity > 0 ? "bg-[#F3C9D3]" : "bg-[#E5E7EB]"
+              totalActivity > 0 ? "bg-mare-negativeLight" : "bg-mare-surface"
             }`}
           >
             <div
-              className="h-full rounded-full bg-mare-tealDark"
+              className="h-full rounded-full bg-mare-positive"
               style={{ width: `${vendasShare}%` }}
             />
           </div>
@@ -110,7 +111,7 @@ export default function HomePage() {
             href="/gastos?tab=pesca"
             className="rounded-xl2 bg-mare-tealLight p-4 h-28 flex flex-col justify-between shadow-card active:scale-[0.98] transition-transform"
           >
-            <Wallet className="h-6 w-6 text-mare-tealDark" strokeWidth={2} />
+            <Wallet className="h-6 w-6 text-mare-positive" strokeWidth={2} />
             <span className="font-semibold text-mare-ink leading-tight">
               Gastos da
               <br />
@@ -121,7 +122,7 @@ export default function HomePage() {
             href="/gastos?tab=casa"
             className="rounded-xl2 bg-mare-yellowLight p-4 h-28 flex flex-col justify-between shadow-card active:scale-[0.98] transition-transform"
           >
-            <HomeIcon className="h-6 w-6 text-mare-yellowDark" strokeWidth={2} />
+            <HomeIcon className="h-6 w-6 text-mare-institutional" strokeWidth={2} />
             <span className="font-semibold text-mare-ink leading-tight">
               Gastos da
               <br />
@@ -144,7 +145,7 @@ export default function HomePage() {
         <section className="mt-4 rounded-xl2 border border-black/5 p-4 shadow-card">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mare-purpleLight">
-              <Target className="h-5 w-5 text-mare-purple" />
+              <Target className="h-5 w-5 text-mare-primary" strokeWidth={2} />
             </span>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-mare-ink">Minha Aposentadoria</p>
@@ -153,7 +154,7 @@ export default function HomePage() {
               ) : state.metaAposentadoria === 0 ? (
                 <Link
                   href="/perfil"
-                  className="text-sm font-medium text-mare-purple hover:underline"
+                  className="text-sm font-medium text-mare-primary hover:underline"
                 >
                   Defina sua meta
                 </Link>
@@ -166,7 +167,7 @@ export default function HomePage() {
           </div>
           {ready && state.metaAposentadoria > 0 && (
             <div
-              className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-mare-purpleLight"
+              className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-mare-institutional"
               role="progressbar"
               aria-label="Progresso da meta de aposentadoria"
               aria-valuemin={0}
@@ -174,7 +175,7 @@ export default function HomePage() {
               aria-valuenow={retirementProgress.barPercentage}
             >
               <div
-                className="h-full rounded-full bg-mare-purple"
+                className="h-full rounded-full bg-mare-accent"
                 style={{ width: `${retirementProgress.barPercentage}%` }}
               />
             </div>
@@ -196,16 +197,16 @@ export default function HomePage() {
               </li>
             )}
             {ready && recentSales.map((sale) => {
-              const meta = saleCategoryMeta[sale.category];
-              const Icon = meta.icon;
+              const categoryLabel =
+                saleCategoryMeta[sale.category]?.label ?? sale.category;
               return (
                 <li key={sale.id} className="py-3 flex items-center gap-3">
-                  <span className="h-10 w-10 rounded-full bg-mare-tealLight flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-mare-tealDark" />
-                  </span>
+                  <CategoryIcon category={sale.category} kind="venda" size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-mare-ink truncate">{sale.buyer}</p>
-                    <p className="text-xs text-mare-slate">{formatDateShort(sale.date)}</p>
+                    <p className="text-xs text-mare-slate">
+                      {categoryLabel} · {formatDateShort(sale.date)}
+                    </p>
                   </div>
                   <span className="font-semibold text-mare-tealDark whitespace-nowrap">
                     + {formatBRL(sale.value)}

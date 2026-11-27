@@ -8,6 +8,12 @@ import type { Expense, Sale } from "./types";
 import type { Workbook } from "exceljs";
 
 const currencyFormat = '"R$" #,##0.00;[Red]-"R$" #,##0.00';
+const primaryFill = {
+  type: "pattern" as const,
+  pattern: "solid" as const,
+  fgColor: { argb: "FF7E22CE" },
+};
+const whiteFont = { color: { argb: "FFFFFFFF" } };
 
 function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
@@ -24,6 +30,7 @@ function fillWorkbook(data: MonthlyExportData, workbook: Workbook): void {
   workbook.creator = "Minha Maré";
 
   const summary = workbook.addWorksheet("Resumo");
+  summary.properties.tabColor = { argb: "FF7E22CE" };
   summary.columns = [
     { header: "Indicador", key: "label", width: 28 },
     { header: "Valor", key: "value", width: 24 },
@@ -31,12 +38,14 @@ function fillWorkbook(data: MonthlyExportData, workbook: Workbook): void {
   summary.addRows(
     data.summary.map(({ label, value }) => ({ label, value }))
   );
-  summary.getRow(1).font = { bold: true };
+  summary.getRow(1).font = { bold: true, ...whiteFont };
+  summary.getRow(1).fill = primaryFill;
   data.summary.forEach((row, index) => {
     if (row.currency) summary.getRow(index + 2).getCell(2).numFmt = currencyFormat;
   });
 
   const sales = workbook.addWorksheet("Vendas");
+  sales.properties.tabColor = { argb: "FF7E22CE" };
   sales.columns = [
     { header: "Data", key: "date", width: 21, style: { numFmt: "dd/mm/yyyy hh:mm" } },
     { header: "Categoria", key: "category", width: 18 },
@@ -60,13 +69,15 @@ function fillWorkbook(data: MonthlyExportData, workbook: Workbook): void {
     "",
     data.salesTotal,
   ]);
-  sales.getRow(1).font = { bold: true };
+  sales.getRow(1).font = { bold: true, ...whiteFont };
+  sales.getRow(1).fill = primaryFill;
   salesTotal.font = { bold: true };
   sales.getColumn("quantity").numFmt = "0.###";
   sales.getColumn("value").numFmt = currencyFormat;
   salesTotal.getCell(6).numFmt = currencyFormat;
 
   const expenses = workbook.addWorksheet("Gastos");
+  expenses.properties.tabColor = { argb: "FF7E22CE" };
   expenses.columns = [
     { header: "Data", key: "date", width: 21, style: { numFmt: "dd/mm/yyyy hh:mm" } },
     { header: "Tipo", key: "kind", width: 14 },
@@ -90,7 +101,8 @@ function fillWorkbook(data: MonthlyExportData, workbook: Workbook): void {
     "",
     data.expensesTotal,
   ]);
-  expenses.getRow(1).font = { bold: true };
+  expenses.getRow(1).font = { bold: true, ...whiteFont };
+  expenses.getRow(1).fill = primaryFill;
   expensesTotal.font = { bold: true };
   expenses.getColumn("value").numFmt = currencyFormat;
   expensesTotal.getCell(5).numFmt = currencyFormat;

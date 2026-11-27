@@ -79,14 +79,14 @@ function LoginForm() {
           />
         </div>
         {(error || params.get("erro") === "callback") && (
-          <p role="alert" className="text-sm text-[#B23B5C]">
+          <p role="alert" className="text-sm text-mare-negative">
             {error || "Não foi possível confirmar o acesso. Solicite um novo link e tente novamente."}
           </p>
         )}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-mare-tealDark py-3.5 font-semibold text-white disabled:opacity-60"
+          className="w-full rounded-full bg-mare-primary py-3.5 font-semibold text-white disabled:opacity-60"
         >
           {submitting ? "Entrando..." : "Entrar"}
         </button>

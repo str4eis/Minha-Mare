@@ -4,7 +4,15 @@
 
 :root {
   --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+  --font-display: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mare-brand: #B381CD;
+  --mare-primary: #7E22CE;
+  --mare-institutional: #581C87;
+  --mare-accent: #2DD4BF;
+  --mare-surface: #F8FAFC;
+  --mare-secondary: #475569;
+  --mare-positive: #0F766E;
+  --mare-negative: #B23B5C;
 }
 
 html,
@@ -13,7 +21,7 @@ body {
 }
 
 body {
-  background: #ffffff;
+  background: var(--mare-surface);
 }
 
 /* Hide scrollbar on the phone shell but keep it scrollable */

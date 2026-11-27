@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Banknote, Ship, Home as HomeIcon, FileDown, Sheet, Share2 } from "lucide-react";
+import {
+  Banknote,
+  FileDown,
+  Frown,
+  Home as HomeIcon,
+  Share2,
+  Sheet,
+  Ship,
+  Smile,
+} from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import MonthPicker from "@/components/MonthPicker";
@@ -84,7 +93,7 @@ export default function ResultadosPage() {
 
         <div className="mt-4 rounded-xl2 bg-mare-purple text-white p-5 shadow-soft flex items-center justify-between">
           <div>
-            <p className="text-sm text-white/75">Total Vendido</p>
+            <p className="text-sm text-white">Total Vendido</p>
             <p className="text-2xl font-semibold mt-1">
               {ready ? formatBRL(totals.totalVendido) : "—"}
             </p>
@@ -96,7 +105,7 @@ export default function ResultadosPage() {
 
         <div className="mt-3 rounded-xl2 bg-mare-tealLight p-5 flex items-center justify-between">
           <div>
-            <p className="text-sm text-mare-tealDark/80">Gastos da Pesca</p>
+            <p className="text-sm text-mare-institutional">Gastos da Pesca</p>
             <p className="text-2xl font-semibold mt-1 text-mare-tealDark">
               {ready ? formatBRL(totals.totalGastosPesca) : "—"}
             </p>
@@ -108,7 +117,7 @@ export default function ResultadosPage() {
 
         <div className="mt-3 rounded-xl2 bg-mare-yellowLight p-5 flex items-center justify-between">
           <div>
-            <p className="text-sm text-mare-yellowDark/80">Gastos da Casa</p>
+            <p className="text-sm text-mare-institutional">Gastos da Casa</p>
             <p className="text-2xl font-semibold mt-1 text-mare-yellowDark">
               {ready ? formatBRL(totals.totalGastosCasa) : "—"}
             </p>
@@ -122,16 +131,26 @@ export default function ResultadosPage() {
           <span
             className={cn(
               "mx-auto h-12 w-12 rounded-full flex items-center justify-center text-2xl",
-              positivo ? "bg-mare-tealDark text-white" : "bg-[#B23B5C] text-white"
+              positivo
+                ? "bg-mare-accent text-mare-institutional"
+                : "bg-mare-negative text-white"
             )}
           >
-            {ready ? (positivo ? "🙂" : "😟") : "—"}
+            {ready ? (
+              positivo ? (
+                <Smile className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
+              ) : (
+                <Frown className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
+              )
+            ) : (
+              "—"
+            )}
           </span>
           <p className="mt-3 font-semibold text-mare-ink">Resultado Final</p>
           <p
             className={cn(
               "mt-1 text-3xl font-bold",
-              positivo ? "text-mare-tealDark" : "text-[#B23B5C]"
+              positivo ? "text-mare-positive" : "text-mare-negative"
             )}
           >
             {ready ? formatBRL(totals.resultado) : "—"}
@@ -139,7 +158,9 @@ export default function ResultadosPage() {
           <span
             className={cn(
               "mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold",
-              positivo ? "bg-mare-tealLight text-mare-tealDark" : "bg-[#F3C9D3] text-[#B23B5C]"
+              positivo
+                ? "bg-mare-accent text-mare-institutional"
+                : "bg-mare-negativeLight text-mare-negative"
             )}
           >
             {ready ? (positivo ? "Lucro do Mês" : "Prejuízo do Mês") : "—"}
@@ -154,7 +175,7 @@ export default function ResultadosPage() {
             </div>
             <div className="mt-2 h-2 w-full rounded-full bg-mare-card overflow-hidden">
               <div
-                className="h-full rounded-full bg-mare-purple"
+                className="h-full rounded-full bg-mare-primary"
                 style={{ width: `${gastoPct}%` }}
               />
             </div>
@@ -165,28 +186,23 @@ export default function ResultadosPage() {
           </div>
         </div>
 
-        <div className="mt-5 rounded-xl2 overflow-hidden relative h-32 shadow-card">
-          <svg viewBox="0 0 400 160" className="w-full h-full" role="img" aria-label="Barco na maré ao entardecer">
-            <defs>
-              <linearGradient id="res-sky" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#5B2A86" />
-                <stop offset="100%" stopColor="#0B6D64" />
-              </linearGradient>
-            </defs>
-            <rect width="400" height="160" fill="url(#res-sky)" />
-            <circle cx="330" cy="40" r="22" fill="#F7C948" opacity="0.85" />
-            <path d="M0 110 C 60 100, 120 118, 180 108 S 300 98, 400 112 V160 H0 Z" fill="#0B6D64" opacity="0.7" />
-            <path d="M180 95 l14 -20 h6 l-4 20 h14 l6 10 h-46 z" fill="#F1E7FB" />
-          </svg>
-          <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/50 to-transparent">
-            <p className="font-display italic text-white text-sm leading-snug">
-              {!ready
-                ? "—"
-                : positivo
+        <div
+          className={cn(
+            "mt-5 rounded-xl2 p-4 shadow-card",
+            !ready
+              ? "bg-mare-surface text-mare-secondary"
+              : positivo
+                ? "bg-mare-accent text-mare-institutional"
+                : "bg-mare-negativeLight text-mare-negative"
+          )}
+        >
+          <p role="status" className="text-sm font-medium leading-relaxed">
+            {!ready
+              ? "—"
+              : positivo
                 ? "Parabéns! Sua maré está produtiva este mês."
                 : "Toda maré tem seu tempo. Vamos ajustar os gastos?"}
-            </p>
-          </div>
+          </p>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -216,8 +232,8 @@ export default function ResultadosPage() {
           <p
             className={`mt-3 rounded-lg px-3 py-2 text-center text-sm ${
               exportMessage.type === "success"
-                ? "bg-mare-tealLight text-mare-tealDark"
-                : "bg-[#F3C9D3] text-[#B23B5C]"
+                ? "bg-mare-accent text-mare-institutional"
+                : "bg-mare-negativeLight text-mare-negative"
             }`}
             role={exportMessage.type === "success" ? "status" : "alert"}
           >
@@ -235,7 +251,7 @@ export default function ResultadosPage() {
           target="_blank"
           rel="noopener noreferrer"
           tabIndex={ready ? undefined : -1}
-          className={`mt-3 w-full flex items-center justify-center gap-2 rounded-full bg-mare-tealDark text-white py-3.5 font-semibold shadow-soft ${
+          className={`mt-3 w-full flex items-center justify-center gap-2 rounded-full bg-mare-primary text-white py-3.5 font-semibold shadow-soft ${
             ready ? "" : "pointer-events-none opacity-50"
           }`}
         >

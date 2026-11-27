@@ -73,7 +73,7 @@ export default function ConfirmDialog({
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-full bg-[#B23B5C] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="rounded-full bg-mare-negative px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
           >
             Excluir
           </button>

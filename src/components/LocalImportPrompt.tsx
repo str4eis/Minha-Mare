@@ -159,14 +159,14 @@ export default function LocalImportPrompt() {
 
   if (result) {
     return (
-      <aside className="sticky top-0 z-30 bg-mare-tealDark px-4 py-3 text-sm text-white">
+      <aside className="sticky top-0 z-30 border-b border-mare-institutional/20 bg-mare-accent px-4 py-3 text-sm text-mare-institutional">
         <div className="flex items-start justify-between gap-3">
           <p role="status">{result}</p>
           <button
             type="button"
             aria-label="Fechar mensagem de importação"
             onClick={() => setResult("")}
-            className="font-semibold"
+            className="font-semibold text-mare-institutional underline"
           >
             Fechar
           </button>
@@ -196,7 +196,7 @@ export default function LocalImportPrompt() {
               type="button"
               onClick={importData}
               disabled={busy}
-              className="rounded-full bg-mare-tealDark px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="rounded-full bg-mare-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
               {busy ? "Importando..." : "Importar para minha conta"}
             </button>
@@ -212,7 +212,7 @@ export default function LocalImportPrompt() {
         </>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-sm text-[#B23B5C]">
+        <p role="alert" className="mt-2 text-sm text-mare-negative">
           {error}
         </p>
       )}

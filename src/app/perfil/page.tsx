@@ -196,12 +196,12 @@ export default function PerfilPage() {
               </div>
 
               {saveError && (
-                <p role="alert" className="text-sm text-[#B23B5C]">
+                <p role="alert" className="text-sm text-mare-negative">
                   {saveError}
                 </p>
               )}
               {saveSuccess && (
-                <p role="status" className="text-sm font-medium text-mare-tealDark">
+                <p role="status" className="text-sm font-medium text-mare-positive">
                   Perfil salvo
                 </p>
               )}
@@ -209,7 +209,7 @@ export default function PerfilPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full rounded-full bg-mare-tealDark py-3.5 font-semibold text-white disabled:opacity-60"
+                className="w-full rounded-full bg-mare-primary py-3.5 font-semibold text-white disabled:opacity-60"
               >
                 {saving ? "Salvando..." : "Salvar perfil"}
               </button>
@@ -225,14 +225,14 @@ export default function PerfilPage() {
                 {loggingOut ? "Saindo..." : "Sair"}
               </button>
               {logoutError && (
-                <p role="alert" className="mt-2 text-sm text-[#B23B5C]">
+                <p role="alert" className="mt-2 text-sm text-mare-negative">
                   {logoutError}
                 </p>
               )}
             </section>
 
-            <section className="mt-6 rounded-xl2 border border-[#B23B5C]/30 p-4">
-              <h2 className="font-semibold text-[#B23B5C]">Excluir minha conta</h2>
+            <section className="mt-6 rounded-xl2 border border-mare-negative p-4">
+              <h2 className="font-semibold text-mare-negative">Excluir minha conta</h2>
               <p className="mt-2 text-sm text-mare-slate">
                 Esta ação é irreversível. Sua conta, perfil, vendas e gastos serão
                 excluídos permanentemente.
@@ -251,7 +251,7 @@ export default function PerfilPage() {
                 className="mt-2 w-full rounded-xl2 border border-black/10 px-3 py-2"
               />
               {deleteError && (
-                <p role="alert" className="mt-2 text-sm text-[#B23B5C]">
+                <p role="alert" className="mt-2 text-sm text-mare-negative">
                   {deleteError}
                 </p>
               )}
@@ -259,7 +259,7 @@ export default function PerfilPage() {
                 type="button"
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirmation !== "EXCLUIR" || deletingAccount}
-                className="mt-4 w-full rounded-full bg-[#B23B5C] py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-4 w-full rounded-full bg-mare-negative py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {deletingAccount ? "Excluindo conta..." : "Excluir minha conta"}
               </button>

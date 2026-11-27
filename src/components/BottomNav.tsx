@@ -34,7 +34,11 @@ export default function BottomNav() {
                       : "h-8 w-8 text-mare-slate group-hover:text-mare-purple"
                   )}
                 >
-                  <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.8} />
+                  <Icon
+                    className="h-5 w-5"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  />
                 </span>
                 <span
                   className={cn(
