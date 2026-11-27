@@ -70,12 +70,12 @@ export async function exportMonthlyPdf(
   cursorY += 8;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
-  doc.text(`Resumo de ${data.monthLabel}`, margin, cursorY);
+  doc.text(`Entrou, saiu e sobrou — ${data.monthLabel}`, margin, cursorY);
   cursorY += 5;
 
   cursorY = drawTableHeading(
     doc,
-    "Resumo",
+    "Valores do mês",
     cursorY + 4,
     autoTable,
     ["Indicador", "Valor"],
@@ -86,7 +86,7 @@ export async function exportMonthlyPdf(
     "Vendas",
     cursorY + 9,
     autoTable,
-    ["Data", "Categoria", "Comprador", "Qtd.", "Unid.", "Valor"],
+    ["Data", "Categoria", "Comprador", "Quantidade", "Unidade", "Valor"],
     preparePdfSalesRows(data)
   );
   drawTableHeading(

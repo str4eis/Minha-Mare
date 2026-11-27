@@ -1,15 +1,12 @@
 "use client";
 
-import { Suspense, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import ConfirmDialog from "@/components/ConfirmDialog";
 import CategoryIcon from "@/components/CategoryIcon";
 import DataStatus from "@/components/DataStatus";
 import Header from "@/components/Header";
-import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
@@ -23,12 +20,17 @@ function GastosContent() {
   const [tab, setTab] = useState<ExpenseKind>(
     requestedTab === "casa" ? "casa" : "pesca"
   );
-  const [query, setQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
-  const historyHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const [query, setQuery] = useState(params.get("busca") ?? "");
+  const [categoryFilter, setCategoryFilter] = useState(
+    params.get("categoria") ?? ""
+  );
   const { state, totals, selectedMonth, hydrated, ready, deleteExpense } = useStore();
+
+  useEffect(() => {
+    setTab(params.get("tab") === "casa" ? "casa" : "pesca");
+    setQuery(params.get("busca") ?? "");
+    setCategoryFilter(params.get("categoria") ?? "");
+  }, [params]);
 
   const meta = tab === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
   const total = tab === "pesca" ? totals.totalGastosPesca : totals.totalGastosCasa;
@@ -84,38 +86,40 @@ function GastosContent() {
   return (
     <div className="flex flex-col min-h-dvh bg-white">
       <Header />
-      <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
         <DataStatus />
-        <h1 className="text-2xl font-semibold">Gastos</h1>
+        <h1 className="text-2xl font-semibold">Histórico de gastos</h1>
+        <p className="mt-1 text-lg text-mare-slate">
+          Veja o que saiu do trabalho ou de casa.
+        </p>
 
-        <div className="mt-4 flex rounded-full bg-mare-card p-1">
+        <div className="mt-4 flex gap-2 rounded-xl2 bg-mare-card p-1">
           <button
             type="button"
             onClick={() => changeTab("pesca")}
             aria-pressed={tab === "pesca"}
             className={cn(
-              "flex-1 rounded-full py-2 text-sm font-semibold transition-colors",
+              "min-h-14 flex-1 rounded-full px-2 text-lg font-semibold transition-colors",
               tab === "pesca"
                 ? "bg-mare-purple text-white shadow-soft"
                 : "text-mare-slate"
             )}
           >
-            Gastos da Pesca
+            Trabalho
           </button>
           <button
             type="button"
             onClick={() => changeTab("casa")}
             aria-pressed={tab === "casa"}
             className={cn(
-              "flex-1 rounded-full py-2 text-sm font-semibold transition-colors",
+              "min-h-14 flex-1 rounded-full px-2 text-lg font-semibold transition-colors",
               tab === "casa"
                 ? "bg-mare-purple text-white shadow-soft"
                 : "text-mare-slate"
             )}
           >
-            Gastos da Casa
+            Casa
           </button>
         </div>
 
@@ -125,8 +129,8 @@ function GastosContent() {
             tab === "pesca" ? "bg-mare-fishingLight" : "bg-mare-homeLight"
           )}
         >
-          <p className="text-xs font-semibold tracking-widest uppercase text-mare-slate">
-            Total {tab === "pesca" ? "com a pesca" : "com a casa"} em {monthLabel}
+          <p className="text-lg font-semibold text-mare-slate">
+            Saiu {tab === "pesca" ? "com o trabalho" : "em casa"} em {monthLabel}
           </p>
           <p
             className={cn(
@@ -138,8 +142,8 @@ function GastosContent() {
           </p>
         </div>
 
-        <p className="mt-5 font-semibold text-mare-ink">
-          Categorias {tab === "pesca" ? "de Pesca" : "da Casa"}
+        <p className="mt-5 text-lg font-semibold text-mare-ink">
+          Gastos {tab === "pesca" ? "do trabalho" : "da casa"}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">
           {categories.map(([category, categoryMeta]) => {
@@ -152,10 +156,10 @@ function GastosContent() {
               >
                 <CategoryIcon category={category} kind={tab} size="sm" />
                 <div>
-                  <p className="font-semibold text-mare-ink text-sm">
+                  <p className="font-semibold text-mare-ink text-lg">
                     {categoryMeta.label}
                   </p>
-                  <p className="text-xs text-mare-slate mt-0.5">
+                  <p className="mt-0.5 text-base text-mare-slate">
                     {!ready
                       ? "—"
                       : spent > 0
@@ -168,59 +172,38 @@ function GastosContent() {
           })}
         </div>
 
-        <div className="mt-5 rounded-xl2 bg-mare-card px-4 py-3">
-          <label htmlFor="expense-search" className="sr-only">
-            Buscar por descrição
-          </label>
-          <input
-            id="expense-search"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar descrição"
-            className="w-full bg-transparent text-sm placeholder:text-mare-slate focus:outline-none"
-          />
-        </div>
-        <div className="mt-3">
-          <label
-            htmlFor="expense-category"
-            className="mb-1 block text-xs font-semibold text-mare-slate"
-          >
-            Filtrar por categoria
-          </label>
-          <select
-            id="expense-category"
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-            className="w-full rounded-xl2 border border-black/10 bg-white px-3 py-2 text-sm text-mare-ink"
-          >
-            <option value="">Todas as categorias</option>
-            {categories.map(([category, categoryMeta]) => (
-              <option key={category} value={category}>
-                {categoryMeta.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Link
+          href={`/gastos/novo?kind=${tab}`}
+          className="mt-4 flex min-h-14 items-center justify-center rounded-full bg-mare-primary px-4 text-lg font-semibold text-white shadow-soft"
+        >
+          Anotar gasto
+        </Link>
+
         {ready && hasActiveFilters && (
-          <p className="mt-3 text-sm text-mare-slate">
-            Total listado: {formatBRL(listedTotal)}
+          <p className="mt-3 text-lg text-mare-slate">
+            Busca aplicada. Total: {formatBRL(listedTotal)}.{" "}
+            <Link href="/mais" className="font-semibold text-mare-purple">
+              Mudar busca
+            </Link>
           </p>
         )}
 
-        <h2
-          ref={historyHeadingRef}
-          tabIndex={-1}
-          className="mt-5 font-semibold text-mare-ink focus:outline-none"
-        >
-          Lançamentos
+        <h2 className="mt-5 text-xl font-semibold text-mare-ink">
+          Lançamentos de {monthLabel}
         </h2>
         <ul className="mt-2 divide-y divide-black/5">
           {ready && sortedExpenses.length === 0 && (
-            <li className="py-4 text-sm text-mare-slate">
-              {hasActiveFilters
-                ? "Nenhum resultado para a busca."
-                : `Nenhum lançamento em ${monthLabel}.`}
+            <li className="py-4 text-lg text-mare-slate">
+              {hasActiveFilters ? (
+                "Nenhum resultado para a busca."
+              ) : (
+                <Link
+                  href={`/gastos/novo?kind=${tab}`}
+                  className="font-semibold text-mare-purple underline"
+                >
+                  Toque aqui para anotar o primeiro gasto.
+                </Link>
+              )}
             </li>
           )}
           {ready &&
@@ -230,36 +213,33 @@ function GastosContent() {
                 <li key={expense.id} className="py-3 flex items-center gap-3">
                   <CategoryIcon category={expense.category} kind={tab} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-mare-ink truncate">
+                    <p className="truncate text-lg font-medium text-mare-ink">
                       {expense.description}
                     </p>
-                    <p className="text-xs text-mare-slate">
+                    <p className="text-base text-mare-slate">
                       {categoryMeta?.label ?? expense.category} ·{" "}
                       {formatDateShort(expense.date)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="font-semibold text-mare-negative whitespace-nowrap">
+                    <span className="whitespace-nowrap text-lg font-semibold text-mare-negative">
                       - {formatBRL(expense.value)}
                     </span>
-                    <div className="flex items-center gap-2 text-xs font-medium">
+                    <div className="flex flex-col items-end gap-1 font-medium">
                       <Link
                         href={`/gastos/${encodeURIComponent(expense.id)}/editar`}
                         aria-label={`Editar gasto: ${expense.description}`}
-                        className="text-mare-purple hover:underline"
+                        className="flex min-h-14 items-center px-2 text-lg text-mare-purple hover:underline"
                       >
                         Editar
                       </Link>
                       <button
                         type="button"
-                        onClick={(event) => {
-                          returnFocusRef.current = event.currentTarget;
-                          setDeletingExpenseId(expense.id);
-                        }}
+                        onClick={() => void deleteExpense(expense.id)}
                         aria-label={`Excluir gasto: ${expense.description}`}
-                        className="text-mare-negative hover:underline"
+                        className="min-h-14 px-2 text-lg font-semibold text-mare-negative hover:underline"
                       >
-                        Excluir
+                        Apagar
                       </button>
                     </div>
                   </div>
@@ -268,29 +248,6 @@ function GastosContent() {
             })}
         </ul>
       </main>
-
-      <ConfirmDialog
-        open={deletingExpenseId !== null}
-        title="Excluir gasto?"
-        description="Este lançamento será removido permanentemente."
-        onCancel={() => setDeletingExpenseId(null)}
-        onConfirm={() => {
-          if (deletingExpenseId) {
-            void deleteExpense(deletingExpenseId).catch(() => undefined);
-          }
-          setDeletingExpenseId(null);
-        }}
-        returnFocusRef={returnFocusRef}
-        fallbackFocusRef={historyHeadingRef}
-      />
-
-      <Link
-        href={`/gastos/novo?kind=${tab}`}
-        aria-label="Registrar novo gasto"
-        className="absolute z-10 bottom-24 right-5 h-14 w-14 rounded-full bg-mare-purple text-white shadow-soft flex items-center justify-center active:scale-95 transition-transform"
-      >
-        <Plus className="h-6 w-6" />
-      </Link>
 
       <BottomNav />
     </div>

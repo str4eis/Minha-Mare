@@ -33,7 +33,7 @@ export default function MoneyInput({
       {...props}
       ref={inputRef}
       type="text"
-      inputMode="numeric"
+      inputMode="decimal"
       value={value}
       onChange={(event) => {
         shouldMoveCaret.current = true;

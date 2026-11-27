@@ -23,6 +23,7 @@ export default function PerfilPage() {
     ready,
     saveProfile,
     clearUserData,
+    flushPendingDeletion,
   } = useStore();
   const [fullName, setFullName] = useState("");
   const [retirementGoal, setRetirementGoal] = useState("");
@@ -89,6 +90,7 @@ export default function PerfilPage() {
     setLoggingOut(true);
     setLogoutError("");
     try {
+      await flushPendingDeletion();
       const { error } = await createClient().auth.signOut();
       if (error) throw error;
       clearUserData();
@@ -106,6 +108,7 @@ export default function PerfilPage() {
     setDeletingAccount(true);
     setDeleteError("");
     try {
+      await flushPendingDeletion();
       const response = await fetch("/api/account/delete", { method: "POST" });
       if (!response.ok) {
         setDeleteError("Não foi possível excluir a conta. Tente novamente.");
@@ -138,7 +141,7 @@ export default function PerfilPage() {
           <>
             <form onSubmit={handleSave} className="mt-5 space-y-4">
               <div className="rounded-xl2 bg-mare-card p-4">
-                <label htmlFor="profile-name" className="block text-sm font-medium">
+                <label htmlFor="profile-name" className="block text-lg font-medium">
                   Nome
                 </label>
                 <input
@@ -151,7 +154,7 @@ export default function PerfilPage() {
               </div>
 
               <div className="rounded-xl2 bg-mare-card p-4">
-                <label htmlFor="profile-email" className="block text-sm font-medium">
+                <label htmlFor="profile-email" className="block text-lg font-medium">
                   E-mail
                 </label>
                 <input
@@ -164,8 +167,14 @@ export default function PerfilPage() {
                 />
               </div>
 
-              <div className="rounded-xl2 bg-mare-card p-4">
-                <label htmlFor="retirement-goal" className="block text-sm font-medium">
+              <div
+                id="retirement-goal-section"
+                className="rounded-xl2 bg-mare-card p-4"
+              >
+                <label
+                  htmlFor="retirement-goal"
+                  className="block text-lg font-medium"
+                >
                   Meta da aposentadoria
                 </label>
                 <div className="mt-2 flex items-center gap-2">
@@ -180,7 +189,7 @@ export default function PerfilPage() {
               </div>
 
               <div className="rounded-xl2 bg-mare-card p-4">
-                <label htmlFor="retirement-saved" className="block text-sm font-medium">
+                <label htmlFor="retirement-saved" className="block text-lg font-medium">
                   Valor guardado
                 </label>
                 <div className="mt-2 flex items-center gap-2">
@@ -195,12 +204,12 @@ export default function PerfilPage() {
               </div>
 
               {saveError && (
-                <p role="alert" className="text-sm text-mare-negative">
+                <p role="alert" className="text-lg text-mare-negative">
                   {saveError}
                 </p>
               )}
               {saveSuccess && (
-                <p role="status" className="text-sm font-medium text-mare-positive">
+                <p role="status" className="text-lg font-medium text-mare-positive">
                   Perfil salvo
                 </p>
               )}
@@ -208,7 +217,7 @@ export default function PerfilPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full rounded-full bg-mare-primary py-3.5 font-semibold text-white disabled:opacity-60"
+                className="min-h-14 w-full rounded-full bg-mare-primary py-3.5 text-lg font-semibold text-white disabled:opacity-60"
               >
                 {saving ? "Salvando..." : "Salvar perfil"}
               </button>
@@ -219,26 +228,26 @@ export default function PerfilPage() {
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="w-full rounded-full border border-mare-purple py-3 font-semibold text-mare-purple disabled:opacity-60"
+                className="min-h-14 w-full rounded-full border border-mare-purple py-3 text-lg font-semibold text-mare-purple disabled:opacity-60"
               >
                 {loggingOut ? "Saindo..." : "Sair"}
               </button>
               {logoutError && (
-                <p role="alert" className="mt-2 text-sm text-mare-negative">
+                <p role="alert" className="mt-2 text-lg text-mare-negative">
                   {logoutError}
                 </p>
               )}
             </section>
 
             <section className="mt-6 rounded-xl2 border border-mare-negative p-4">
-              <h2 className="font-semibold text-mare-negative">Excluir minha conta</h2>
-              <p className="mt-2 text-sm text-mare-slate">
+              <h2 className="text-lg font-semibold text-mare-negative">Excluir minha conta</h2>
+              <p className="mt-2 text-lg text-mare-slate">
                 Esta ação é irreversível. Sua conta, perfil, vendas e gastos serão
                 excluídos permanentemente.
               </p>
               <label
                 htmlFor="delete-account-confirmation"
-                className="mt-4 block text-sm font-medium"
+                className="mt-4 block text-lg font-medium"
               >
                 Digite EXCLUIR para confirmar
               </label>
@@ -247,10 +256,10 @@ export default function PerfilPage() {
                 value={deleteConfirmation}
                 onChange={(event) => setDeleteConfirmation(event.target.value)}
                 autoComplete="off"
-                className="mt-2 w-full rounded-xl2 border border-black/10 px-3 py-2"
+                className="mt-2 min-h-14 w-full rounded-xl2 border border-black/10 px-3 text-lg"
               />
               {deleteError && (
-                <p role="alert" className="mt-2 text-sm text-mare-negative">
+                <p role="alert" className="mt-2 text-lg text-mare-negative">
                   {deleteError}
                 </p>
               )}
@@ -258,7 +267,7 @@ export default function PerfilPage() {
                 type="button"
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirmation !== "EXCLUIR" || deletingAccount}
-                className="mt-4 w-full rounded-full bg-mare-negative py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-4 min-h-14 w-full rounded-full bg-mare-negative py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {deletingAccount ? "Excluindo conta..." : "Excluir minha conta"}
               </button>

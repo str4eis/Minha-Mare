@@ -7,10 +7,11 @@ export function createWhatsAppSummary(
   totals: MonthlyTotals
 ): string {
   return (
-    `Resumo de ${currentMonthLabel(year, month)} — Minha Maré\n` +
-    `Total vendido: ${formatBRL(totals.totalVendido)}\n` +
-    `Gastos da pesca: ${formatBRL(totals.totalGastosPesca)}\n` +
-    `Gastos da casa: ${formatBRL(totals.totalGastosCasa)}\n` +
-    `Resultado final: ${formatBRL(totals.resultado)}`
+    `Minha Maré — ${currentMonthLabel(year, month)}\n` +
+    `Entrou: ${formatBRL(totals.totalVendido)}\n` +
+    `Saiu com trabalho: ${formatBRL(totals.totalGastosPesca)}\n` +
+    `Saiu em casa: ${formatBRL(totals.totalGastosCasa)}\n` +
+    `Saiu no total: ${formatBRL(totals.totalGastos)}\n` +
+    `Sobrou: ${formatBRL(totals.resultado)}`
   );
 }

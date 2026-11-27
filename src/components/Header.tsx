@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { UserRound, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 interface HeaderProps {
   variant?: "profile" | "close";
@@ -31,17 +31,18 @@ export default function Header({ variant = "profile", closeHref = "/vendas" }: H
         <Link
           href={closeHref}
           aria-label="Fechar"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-mare-primary transition-colors hover:bg-mare-purpleLight"
+          className="flex min-h-14 shrink-0 items-center gap-2 rounded-full px-3 text-lg font-semibold text-mare-primary transition-colors hover:bg-mare-purpleLight"
         >
           <X className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+          <span>Fechar</span>
         </Link>
       ) : (
         <Link
-          href="/perfil"
-          aria-label="Abrir perfil"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-mare-primary transition-colors hover:bg-mare-purpleLight"
+          href="/mais"
+          className="flex min-h-14 shrink-0 items-center gap-2 rounded-full px-2 text-lg font-semibold text-mare-primary transition-colors hover:bg-mare-purpleLight"
         >
-          <UserRound className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+          <Menu className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+          <span>Mais</span>
         </Link>
       )}
     </header>

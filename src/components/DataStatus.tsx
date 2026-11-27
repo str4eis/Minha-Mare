@@ -8,7 +8,7 @@ export default function DataStatus() {
 
   return (
     <div
-      className="mt-4 rounded-xl2 bg-mare-card p-4 text-sm text-mare-slate"
+      className="mt-4 rounded-xl2 bg-mare-card p-4 text-lg text-mare-slate"
       role={error ? "alert" : "status"}
       aria-live="polite"
     >
@@ -17,7 +17,7 @@ export default function DataStatus() {
         <button
           type="button"
           onClick={retry}
-          className="mt-3 rounded-full bg-mare-purple px-4 py-2 font-semibold text-white"
+          className="mt-3 min-h-14 rounded-full bg-mare-purple px-5 text-lg font-semibold text-white"
         >
           Tentar de novo
         </button>

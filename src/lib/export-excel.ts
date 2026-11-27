@@ -29,7 +29,7 @@ function downloadBlob(blob: Blob, fileName: string): void {
 function fillWorkbook(data: MonthlyExportData, workbook: Workbook): void {
   workbook.creator = "Minha Maré";
 
-  const summary = workbook.addWorksheet("Resumo");
+  const summary = workbook.addWorksheet("Entrou, Saiu e Sobrou");
   summary.properties.tabColor = { argb: "FF7E22CE" };
   summary.columns = [
     { header: "Indicador", key: "label", width: 28 },

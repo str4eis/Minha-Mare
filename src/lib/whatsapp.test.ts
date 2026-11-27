@@ -12,11 +12,12 @@ describe("createWhatsAppSummary", () => {
         resultado: 69.5,
       })
     ).toContain(
-      "Resumo de Novembro de 2026 — Minha Maré\n" +
-        "Total vendido: R$ 100,00\n" +
-        "Gastos da pesca: R$ 20,50\n" +
-        "Gastos da casa: R$ 10,00\n" +
-        "Resultado final: R$ 69,50"
+      "Minha Maré — Novembro de 2026\n" +
+        "Entrou: R$ 100,00\n" +
+        "Saiu com trabalho: R$ 20,50\n" +
+        "Saiu em casa: R$ 10,00\n" +
+        "Saiu no total: R$ 30,50\n" +
+        "Sobrou: R$ 69,50"
     );
   });
 });

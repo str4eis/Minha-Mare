@@ -17,11 +17,13 @@ describe("auth route helpers", () => {
     expect(isProtectedPath("/vendas/novo")).toBe(true);
     expect(isProtectedPath("/perfil")).toBe(true);
     expect(isProtectedPath("/perfil/editar")).toBe(true);
+    expect(isProtectedPath("/mais")).toBe(true);
     expect(isProtectedPath("/login")).toBe(false);
     expect(isAuthPath("/login")).toBe(true);
     expect(isAuthPath("/cadastro")).toBe(true);
     expect(isAuthPath("/recuperar-senha")).toBe(false);
     expect(isAuthPath("/redefinir-senha")).toBe(false);
+    expect(isAuthPath("/mais")).toBe(false);
     expect(isAuthPath("/auth/callback")).toBe(false);
   });
 

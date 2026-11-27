@@ -4,6 +4,7 @@ import {
   saleCategoryMeta,
 } from "./categories";
 import { currentMonthLabel, formatBRL } from "./format";
+import { formatSaleUnit } from "./sale-entry";
 import type { Expense, Sale } from "./types";
 
 export interface MonthlyTotals {
@@ -121,19 +122,19 @@ export function prepareMonthlyExportData(
     summary: [
       { label: "Mês", value: monthLabel, currency: false },
       { label: "Ano", value: year, currency: false },
-      { label: "Total vendido", value: totals.totalVendido, currency: true },
+      { label: "Entrou", value: totals.totalVendido, currency: true },
       {
-        label: "Gastos da pesca",
+        label: "Saiu com trabalho",
         value: totals.totalGastosPesca,
         currency: true,
       },
       {
-        label: "Gastos da casa",
+        label: "Saiu em casa",
         value: totals.totalGastosCasa,
         currency: true,
       },
-      { label: "Total de gastos", value: totals.totalGastos, currency: true },
-      { label: "Resultado", value: totals.resultado, currency: true },
+      { label: "Saiu no total", value: totals.totalGastos, currency: true },
+      { label: "Sobrou", value: totals.resultado, currency: true },
     ],
     sales: sales.map((sale) => ({
       date: excelDateInRecife(sale.date),
@@ -141,13 +142,13 @@ export function prepareMonthlyExportData(
       category: saleCategoryMeta[sale.category].label,
       buyer: sale.buyer,
       quantity: sale.quantity,
-      unit: sale.unit,
+      unit: formatSaleUnit(sale.unit),
       value: sale.value,
     })),
     expenses: expenses.map((expense) => ({
       date: excelDateInRecife(expense.date),
       dateLabel: formatExportDate(expense.date),
-      kind: expense.kind === "pesca" ? "Pesca" : "Casa",
+      kind: expense.kind === "pesca" ? "Trabalho" : "Casa",
       category:
         expense.kind === "pesca"
           ? fishingExpenseMeta[expense.category as keyof typeof fishingExpenseMeta].label

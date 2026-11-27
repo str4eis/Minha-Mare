@@ -1,5 +1,5 @@
 export function isProtectedPath(pathname: string): boolean {
-  return ["/home", "/vendas", "/gastos", "/resultados", "/perfil"].some(
+  return ["/home", "/vendas", "/gastos", "/resultados", "/perfil", "/mais"].some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
 }

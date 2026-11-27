@@ -26,7 +26,12 @@ import {
   updateSaleById,
 } from "./data/sales";
 import { getProfile, upsertProfile } from "./data/profile";
-import { ExpenseUpdate, SaleUpdate } from "./state";
+import {
+  ExpenseUpdate,
+  restoreExpense,
+  restoreSale,
+  SaleUpdate,
+} from "./state";
 import type { Database } from "./supabase/database.types";
 import { getProfileDisplayName } from "./profile-name";
 
@@ -46,6 +51,9 @@ interface StoreContextValue {
   addSale: (sale: Omit<Sale, "id">) => Promise<void>;
   updateSale: (id: string, sale: SaleUpdate) => Promise<void>;
   deleteSale: (id: string) => Promise<void>;
+  undoDelete: () => void;
+  undoNotice: string | null;
+  flushPendingDeletion: () => Promise<void>;
   addExpense: (expense: Omit<Expense, "id">) => Promise<void>;
   updateExpense: (id: string, expense: ExpenseUpdate) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
@@ -63,6 +71,24 @@ interface StoreContextValue {
     resultado: number;
   };
 }
+
+type PendingDeletion =
+  | {
+      kind: "sale";
+      item: Sale;
+      month: SelectedMonth;
+      userId: string;
+      timer: number | null;
+      commit: Promise<boolean> | null;
+    }
+  | {
+      kind: "expense";
+      item: Expense;
+      month: SelectedMonth;
+      userId: string;
+      timer: number | null;
+      commit: Promise<boolean> | null;
+    };
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
@@ -88,8 +114,10 @@ function monthForDate(date: string): SelectedMonth {
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const clientRef = useRef<SupabaseClient<Database> | null>(null);
   const activeUserId = useRef<string | null>(null);
+  const pendingDeletionRef = useRef<PendingDeletion | null>(null);
   const [state, setState] = useState<AppState>(emptyState);
   const [selectedMonth, setSelectedMonth] = useState<SelectedMonth>(getCurrentMonth);
+  const selectedMonthRef = useRef(selectedMonth);
   const [hydrated, setHydrated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
@@ -99,18 +127,114 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [configurationError, setConfigurationError] = useState(false);
+  const [undoNotice, setUndoNotice] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [dataRefreshCount, setDataRefreshCount] = useState(0);
   const requestId = useRef(0);
+
+  useEffect(() => {
+    selectedMonthRef.current = selectedMonth;
+  }, [selectedMonth]);
 
   const getClient = useCallback(() => {
     if (!clientRef.current) clientRef.current = createClient();
     return clientRef.current;
   }, []);
 
+  const commitPendingDeletion = useCallback(async (): Promise<boolean> => {
+    const pending = pendingDeletionRef.current;
+    if (!pending) return true;
+    if (pending.commit) return pending.commit;
+
+    if (pending.timer !== null) window.clearTimeout(pending.timer);
+    setUndoNotice(null);
+
+    pending.commit = (async () => {
+      try {
+        if (pending.kind === "sale") {
+          await deleteSaleById(getClient(), pending.item.id);
+        } else {
+          await deleteExpenseById(getClient(), pending.item.id);
+        }
+        setError(null);
+        return true;
+      } catch {
+        if (activeUserId.current === pending.userId) {
+          const monthIsSelected =
+            selectedMonthRef.current.year === pending.month.year &&
+            selectedMonthRef.current.month === pending.month.month;
+          if (pending.kind === "sale" && monthIsSelected) {
+            setState((current) => restoreSale(current, pending.item));
+            setError("Não foi possível excluir a venda. Ela voltou para a lista.");
+          } else if (pending.kind === "expense" && monthIsSelected) {
+            setState((current) => restoreExpense(current, pending.item));
+            setError("Não foi possível excluir o gasto. Ele voltou para a lista.");
+          } else {
+            setError("Não foi possível concluir a exclusão. O lançamento continua salvo.");
+          }
+        }
+        return false;
+      } finally {
+        if (pendingDeletionRef.current === pending) {
+          pendingDeletionRef.current = null;
+        }
+      }
+    })();
+
+    return pending.commit;
+  }, [getClient]);
+
+  const undoDelete = useCallback(() => {
+    const pending = pendingDeletionRef.current;
+    if (!pending || pending.commit) return;
+
+    if (pending.timer !== null) window.clearTimeout(pending.timer);
+    pendingDeletionRef.current = null;
+    setUndoNotice(null);
+    if (activeUserId.current !== pending.userId) return;
+
+    const monthIsSelected =
+      selectedMonthRef.current.year === pending.month.year &&
+      selectedMonthRef.current.month === pending.month.month;
+    if (!monthIsSelected) {
+      setSelectedMonth(pending.month);
+      return;
+    }
+
+    if (pending.kind === "sale") {
+      setState((current) => restoreSale(current, pending.item));
+    } else {
+      setState((current) => restoreExpense(current, pending.item));
+    }
+  }, []);
+
+  const flushPendingDeletion = useCallback(async () => {
+    if (!pendingDeletionRef.current) return;
+    const committed = await commitPendingDeletion();
+    if (!committed) {
+      throw new Error("A exclusão não foi concluída. Tente novamente antes de sair.");
+    }
+  }, [commitPendingDeletion]);
+
+  useEffect(
+    () => () => {
+      const pending = pendingDeletionRef.current;
+      if (pending?.timer !== null && pending?.timer !== undefined) {
+        window.clearTimeout(pending.timer);
+      }
+    },
+    []
+  );
+
   const acceptUser = useCallback((user: User | null) => {
     const nextUserId = user?.id ?? null;
     if (activeUserId.current !== nextUserId) {
+      const pending = pendingDeletionRef.current;
+      if (pending?.timer !== null && pending?.timer !== undefined) {
+        window.clearTimeout(pending.timer);
+      }
+      pendingDeletionRef.current = null;
+      setUndoNotice(null);
       activeUserId.current = nextUserId;
       setState(emptyState());
       setError(null);
@@ -303,19 +427,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const deleteSale = useCallback(
     async (id: string) => {
-      try {
-        await deleteSaleById(getClient(), id);
-        setState((current) => ({
-          ...current,
-          sales: current.sales.filter((item) => item.id !== id),
-        }));
-        setError(null);
-      } catch {
-        setError("Não foi possível excluir a venda. Tente novamente.");
-        throw new Error("Não foi possível excluir a venda. Tente novamente.");
-      }
+      const item = state.sales.find((sale) => sale.id === id);
+      if (!item || !userId) return;
+      if (pendingDeletionRef.current && !(await commitPendingDeletion())) return;
+
+      setState((current) => ({
+        ...current,
+        sales: current.sales.filter((sale) => sale.id !== id),
+      }));
+      const pending: PendingDeletion = {
+        kind: "sale",
+        item,
+        month: monthForDate(item.date),
+        userId,
+        timer: null,
+        commit: null,
+      };
+      pendingDeletionRef.current = pending;
+      setUndoNotice("Venda apagada.");
+      pending.timer = window.setTimeout(() => {
+        void commitPendingDeletion();
+      }, 6_000);
     },
-    [getClient]
+    [commitPendingDeletion, state.sales, userId]
   );
 
   const addExpense = useCallback(
@@ -359,19 +493,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const deleteExpense = useCallback(
     async (id: string) => {
-      try {
-        await deleteExpenseById(getClient(), id);
-        setState((current) => ({
-          ...current,
-          expenses: current.expenses.filter((item) => item.id !== id),
-        }));
-        setError(null);
-      } catch {
-        setError("Não foi possível excluir o gasto. Tente novamente.");
-        throw new Error("Não foi possível excluir o gasto. Tente novamente.");
-      }
+      const item = state.expenses.find((expense) => expense.id === id);
+      if (!item || !userId) return;
+      if (pendingDeletionRef.current && !(await commitPendingDeletion())) return;
+
+      setState((current) => ({
+        ...current,
+        expenses: current.expenses.filter((expense) => expense.id !== id),
+      }));
+      const pending: PendingDeletion = {
+        kind: "expense",
+        item,
+        month: monthForDate(item.date),
+        userId,
+        timer: null,
+        commit: null,
+      };
+      pendingDeletionRef.current = pending;
+      setUndoNotice("Gasto apagado.");
+      pending.timer = window.setTimeout(() => {
+        void commitPendingDeletion();
+      }, 6_000);
     },
-    [getClient]
+    [commitPendingDeletion, state.expenses, userId]
   );
 
   const saveProfile = useCallback(
@@ -430,6 +574,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addSale,
     updateSale,
     deleteSale,
+    undoDelete,
+    undoNotice,
+    flushPendingDeletion,
     addExpense,
     updateExpense,
     deleteExpense,

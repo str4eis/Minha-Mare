@@ -3,6 +3,7 @@ import type { Sale } from "../types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../supabase/database.types";
 import { mapSaleRow, toSaleInsert } from "./mappers";
+import type { SaleCategory } from "../types";
 
 type Client = SupabaseClient<Database>;
 
@@ -21,6 +22,34 @@ export async function listSalesForMonth(
 
   if (error) throw error;
   return data.map(mapSaleRow);
+}
+
+export async function getLatestSale(client: Client): Promise<Sale | null> {
+  const { data, error } = await client
+    .from("sales")
+    .select("*")
+    .order("occurred_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapSaleRow(data) : null;
+}
+
+export async function getLatestSaleForCategory(
+  client: Client,
+  category: SaleCategory
+): Promise<Sale | null> {
+  const { data, error } = await client
+    .from("sales")
+    .select("*")
+    .eq("category", category)
+    .order("occurred_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapSaleRow(data) : null;
 }
 
 export async function insertSale(

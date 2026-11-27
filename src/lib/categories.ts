@@ -10,7 +10,7 @@ export const saleCategoryMeta: Record<SaleCategory, { label: string }> = {
   peixe: { label: "Peixe" },
   marisco: { label: "Marisco" },
   sururu: { label: "Sururu" },
-  outros: { label: "Outros" },
+  outros: { label: "Outro" },
 };
 
 export const fishingExpenseMeta: Record<
@@ -20,10 +20,10 @@ export const fishingExpenseMeta: Record<
   combustivel: { label: "Combustível" },
   transporte: { label: "Transporte" },
   gelo: { label: "Gelo" },
-  equipamentos: { label: "Equipamentos" },
-  manutencao: { label: "Manutenção" },
-  iscas: { label: "Iscas" },
-  outros: { label: "Outros" },
+  equipamentos: { label: "Material de pesca" },
+  manutencao: { label: "Conserto" },
+  iscas: { label: "Isca" },
+  outros: { label: "Outro" },
 };
 
 export const homeExpenseMeta: Record<
@@ -31,9 +31,9 @@ export const homeExpenseMeta: Record<
   { label: string }
 > = {
   alimentacao: { label: "Alimentação" },
-  moradia: { label: "Moradia" },
+  moradia: { label: "Contas de casa" },
   saude: { label: "Saúde" },
   educacao: { label: "Educação" },
   lazer: { label: "Lazer" },
-  outros: { label: "Outros" },
+  outros: { label: "Outro" },
 };

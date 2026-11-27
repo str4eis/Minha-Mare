@@ -78,6 +78,7 @@ describe("export data preparation", () => {
       dateLabel: "31/10/2026, 23:30",
       category: "Peixe",
       buyer: "=1+1",
+      unit: "quilo",
       value: 20.3,
     });
     expect(data.expenses[0]).toMatchObject({
@@ -88,11 +89,11 @@ describe("export data preparation", () => {
       description: "@SUM(A1:A2)",
       value: 5.3,
     });
-    expect(data.summary.find((row) => row.label === "Total vendido")?.value).toBe(
+    expect(data.summary.find((row) => row.label === "Entrou")?.value).toBe(
       20.3
     );
     expect(preparePdfSummaryRows(data)).toContainEqual([
-      "Resultado",
+      "Sobrou",
       "R$ 15,00",
     ]);
   });

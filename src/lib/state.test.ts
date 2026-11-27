@@ -4,6 +4,8 @@ import {
   addSale,
   deleteExpense,
   deleteSale,
+  restoreExpense,
+  restoreSale,
   updateExpense,
   updateSale,
 } from "./state";
@@ -69,6 +71,12 @@ describe("sale state operations", () => {
     expect(deleteSale(initialState, sale.id).sales).toEqual([]);
     expect(initialState.sales).toEqual([sale]);
   });
+
+  it("restores a sale once after an undo", () => {
+    const withoutSale = deleteSale(initialState, sale.id);
+    expect(restoreSale(withoutSale, sale).sales).toEqual([sale]);
+    expect(restoreSale(initialState, sale).sales).toEqual([sale]);
+  });
 });
 
 describe("expense state operations", () => {
@@ -101,6 +109,12 @@ describe("expense state operations", () => {
   it("deletes an expense", () => {
     expect(deleteExpense(initialState, expense.id).expenses).toEqual([]);
     expect(initialState.expenses).toEqual([expense]);
+  });
+
+  it("restores an expense once after an undo", () => {
+    const withoutExpense = deleteExpense(initialState, expense.id);
+    expect(restoreExpense(withoutExpense, expense).expenses).toEqual([expense]);
+    expect(restoreExpense(initialState, expense).expenses).toEqual([expense]);
   });
 });
 

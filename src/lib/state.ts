@@ -70,6 +70,13 @@ export function deleteSale(state: AppState, id: string): AppState {
   return { ...state, sales: state.sales.filter((item) => item.id !== id) };
 }
 
+export function restoreSale(state: AppState, sale: Sale): AppState {
+  return {
+    ...state,
+    sales: [sale, ...state.sales.filter((item) => item.id !== sale.id)],
+  };
+}
+
 export function addExpense(state: AppState, expense: Expense): AppState {
   validateExpense(expense);
   return { ...state, expenses: [expense, ...state.expenses] };
@@ -94,4 +101,14 @@ export function updateExpense(
 export function deleteExpense(state: AppState, id: string): AppState {
   if (!state.expenses.some((item) => item.id === id)) return state;
   return { ...state, expenses: state.expenses.filter((item) => item.id !== id) };
+}
+
+export function restoreExpense(state: AppState, expense: Expense): AppState {
+  return {
+    ...state,
+    expenses: [
+      expense,
+      ...state.expenses.filter((item) => item.id !== expense.id),
+    ],
+  };
 }
