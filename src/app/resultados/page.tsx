@@ -5,19 +5,20 @@ import { Banknote, Ship, Home as HomeIcon, FileDown, Sheet, Share2 } from "lucid
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import MonthPicker from "@/components/MonthPicker";
+import DataStatus from "@/components/DataStatus";
 import { useStore } from "@/lib/store";
 import { formatBRL, currentMonthLabel } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 export default function ResultadosPage() {
-  const { totals, selectedMonth, hydrated } = useStore();
+  const { totals, selectedMonth, hydrated, ready } = useStore();
   const [toast, setToast] = useState<string | null>(null);
   const monthLabel = hydrated
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
 
   const gastoPct =
-    !hydrated || totals.totalVendido === 0
+    !ready || totals.totalVendido === 0
       ? 0
       : Math.min(100, Math.round((totals.totalGastos / totals.totalVendido) * 100));
 
@@ -44,6 +45,7 @@ export default function ResultadosPage() {
       <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
+        <DataStatus />
         <h1 className="text-2xl font-semibold">Meu Resultado</h1>
         <p className="text-mare-slate mt-1">{monthLabel}</p>
 
@@ -51,7 +53,7 @@ export default function ResultadosPage() {
           <div>
             <p className="text-sm text-white/75">Total Vendido</p>
             <p className="text-2xl font-semibold mt-1">
-              {hydrated ? formatBRL(totals.totalVendido) : "—"}
+              {ready ? formatBRL(totals.totalVendido) : "—"}
             </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
@@ -63,7 +65,7 @@ export default function ResultadosPage() {
           <div>
             <p className="text-sm text-mare-tealDark/80">Gastos da Pesca</p>
             <p className="text-2xl font-semibold mt-1 text-mare-tealDark">
-              {hydrated ? formatBRL(totals.totalGastosPesca) : "—"}
+              {ready ? formatBRL(totals.totalGastosPesca) : "—"}
             </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/50 flex items-center justify-center">
@@ -75,7 +77,7 @@ export default function ResultadosPage() {
           <div>
             <p className="text-sm text-mare-yellowDark/80">Gastos da Casa</p>
             <p className="text-2xl font-semibold mt-1 text-mare-yellowDark">
-              {hydrated ? formatBRL(totals.totalGastosCasa) : "—"}
+              {ready ? formatBRL(totals.totalGastosCasa) : "—"}
             </p>
           </div>
           <span className="h-11 w-11 rounded-full bg-white/50 flex items-center justify-center">
@@ -90,7 +92,7 @@ export default function ResultadosPage() {
               positivo ? "bg-mare-tealDark text-white" : "bg-[#B23B5C] text-white"
             )}
           >
-            {hydrated ? (positivo ? "🙂" : "😟") : "—"}
+            {ready ? (positivo ? "🙂" : "😟") : "—"}
           </span>
           <p className="mt-3 font-semibold text-mare-ink">Resultado Final</p>
           <p
@@ -99,7 +101,7 @@ export default function ResultadosPage() {
               positivo ? "text-mare-tealDark" : "text-[#B23B5C]"
             )}
           >
-            {hydrated ? formatBRL(totals.resultado) : "—"}
+            {ready ? formatBRL(totals.resultado) : "—"}
           </p>
           <span
             className={cn(
@@ -107,14 +109,14 @@ export default function ResultadosPage() {
               positivo ? "bg-mare-tealLight text-mare-tealDark" : "bg-[#F3C9D3] text-[#B23B5C]"
             )}
           >
-            {hydrated ? (positivo ? "Lucro do Mês" : "Prejuízo do Mês") : "—"}
+            {ready ? (positivo ? "Lucro do Mês" : "Prejuízo do Mês") : "—"}
           </span>
 
           <div className="mt-5 text-left">
             <div className="flex items-center justify-between text-xs text-mare-slate">
               <span>Gastos Totais vs Vendas</span>
               <span className="font-semibold text-mare-ink">
-                {hydrated ? `${gastoPct}% gasto` : "—"}
+                {ready ? `${gastoPct}% gasto` : "—"}
               </span>
             </div>
             <div className="mt-2 h-2 w-full rounded-full bg-mare-card overflow-hidden">
@@ -124,8 +126,8 @@ export default function ResultadosPage() {
               />
             </div>
             <div className="mt-1.5 flex items-center justify-between text-xs text-mare-slate">
-              <span>{hydrated ? `${formatBRL(totals.totalGastos)} gastos` : "—"}</span>
-              <span>{hydrated ? `${formatBRL(totals.totalVendido)} meta` : "—"}</span>
+              <span>{ready ? `${formatBRL(totals.totalGastos)} gastos` : "—"}</span>
+              <span>{ready ? `${formatBRL(totals.totalVendido)} meta` : "—"}</span>
             </div>
           </div>
         </div>
@@ -145,7 +147,7 @@ export default function ResultadosPage() {
           </svg>
           <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/50 to-transparent">
             <p className="font-display italic text-white text-sm leading-snug">
-              {!hydrated
+              {!ready
                 ? "—"
                 : positivo
                 ? "Parabéns! Sua maré está produtiva este mês."
@@ -172,12 +174,12 @@ export default function ResultadosPage() {
         </div>
 
         <a
-          href={hydrated ? `https://wa.me/?text=${shareText}` : undefined}
-          aria-disabled={!hydrated}
+        href={ready ? `https://wa.me/?text=${shareText}` : undefined}
+        aria-disabled={!ready}
           target="_blank"
           rel="noopener noreferrer"
           className={`mt-3 w-full flex items-center justify-center gap-2 rounded-full bg-mare-tealDark text-white py-3.5 font-semibold shadow-soft ${
-            hydrated ? "" : "pointer-events-none opacity-50"
+            ready ? "" : "pointer-events-none opacity-50"
           }`}
         >
           <Share2 className="h-4 w-4" />

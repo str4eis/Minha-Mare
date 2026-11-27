@@ -38,6 +38,8 @@ export default function SaleForm({ sale }: SaleFormProps) {
   const [today, setToday] = useState("");
   const [date, setDate] = useState(sale ? isoToDateInput(sale.date) : "");
   const [dateError, setDateError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const todayDate = isoToDateInput(new Date().toISOString());
@@ -46,9 +48,10 @@ export default function SaleForm({ sale }: SaleFormProps) {
   }, [sale]);
 
   const numericValue = parseMoneyInput(value);
-  const canSave = numericValue !== null && quantity > 0 && date !== "" && today !== "";
+  const canSave =
+    numericValue !== null && quantity > 0 && date !== "" && today !== "" && !saving;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!canSave || numericValue === null) return;
 
     let occurredAt: string;
@@ -69,9 +72,21 @@ export default function SaleForm({ sale }: SaleFormProps) {
       date: occurredAt,
     };
 
-    if (sale) updateSale(sale.id, saleData);
-    else addSale(saleData);
-    router.push("/vendas");
+    setSaving(true);
+    setSaveError("");
+    try {
+      if (sale) await updateSale(sale.id, saleData);
+      else await addSale(saleData);
+      router.push("/vendas");
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível salvar a venda. Tente novamente."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -215,6 +230,12 @@ export default function SaleForm({ sale }: SaleFormProps) {
           </div>
         </div>
 
+        {saveError && (
+          <p className="mt-4 text-sm text-[#B23B5C]" role="alert">
+            {saveError}
+          </p>
+        )}
+
         <button
           type="button"
           onClick={handleSave}
@@ -227,7 +248,7 @@ export default function SaleForm({ sale }: SaleFormProps) {
           )}
         >
           <CircleCheck className="h-5 w-5" />
-          {sale ? "Salvar alterações" : "Salvar Venda"}
+          {saving ? "Salvando..." : sale ? "Salvar alterações" : "Salvar Venda"}
         </button>
       </main>
 

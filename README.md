@@ -1,56 +1,85 @@
 # Minha Maré
 
-Aplicativo web de precificação e controle financeiro para marisqueiras, feito em **Next.js 14 (App Router)**, **TypeScript** e **Tailwind CSS**.
+Aplicativo web de controle financeiro para marisqueiras, feito em **Next.js 15.5**,
+**React 18**, **TypeScript** e **Tailwind CSS**. O acesso é feito com e-mail e senha;
+vendas, gastos e perfil são armazenados no Supabase, vinculados à usuária autenticada.
 
 ## Telas
 
-- **/** — Boas-vindas / onboarding
-- **/home** — Início (resumo do mês, atalhos, meta de aposentadoria, vendas recentes)
-- **/vendas** — Lista de vendas + botão para nova venda
-- **/vendas/nova** — Registrar venda (categoria, quantidade, valor)
-- **/gastos** — Gastos da Pesca / Gastos da Casa (abas + categorias + lançamentos)
-- **/gastos/novo** — Registrar gasto
-- **/resultados** — Totais do mês, resultado final, exportar e compartilhar
+- **/** — Boas-vindas, cadastro ou acesso à conta
+- **/home** — Resumo do mês e lançamentos recentes
+- **/vendas** e **/gastos** — Histórico mensal, filtros, edição e exclusão
+- **/resultados** — Totais e resultado do mês
+- **/login**, **/cadastro**, **/recuperar-senha** e **/redefinir-senha** — Autenticação
 
-## Como rodar
+## Configuração local
+
+1. Instale as dependências e crie as variáveis locais:
+
+   ```bash
+   npm install
+   cp .env.example .env.local
+   ```
+
+2. No painel do Supabase, abra **Project Settings → API** e copie a **Project URL** e
+   a chave pública **anon** para `.env.local`. Projetos Supabase que já usam a chave
+   pública nova também podem configurá-la como
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`:
+
+   ```dotenv
+   NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon
+   ```
+
+3. Configure **Authentication → URL Configuration**:
+   - **Site URL**: `http://localhost:3000` durante o desenvolvimento (use o domínio do
+     app em produção).
+   - **Redirect URLs**: inclua `http://localhost:3000/auth/callback` e a URL
+     correspondente do ambiente publicado.
+
+4. Inicie o Next.js:
+
+   ```bash
+   npm run dev
+   ```
+
+   Acesse http://localhost:3000.
+
+> **Segredo:** a chave `service_role` nunca deve ir para o front-end nem para o
+> repositório. O app usa somente `NEXT_PUBLIC_SUPABASE_URL` e
+> `NEXT_PUBLIC_SUPABASE_ANON_KEY`; a autorização dos dados é aplicada pelas policies
+> de RLS no banco.
+
+## Banco de dados e migration
+
+No painel do Supabase, crie um **New project**, escolha a organização, nome, senha do
+banco e região. A estrutura local da CLI e a migration inicial ficam em `supabase/`.
+
+Para aplicar a migration manualmente:
 
 ```bash
-npm install
-npm run dev
+npx supabase login
+npx supabase link --project-ref <ref>
+npx supabase db push
 ```
 
-Acesse http://localhost:3000
+O comando `link` pede a senha do banco de dados do projeto. Revise o SQL antes de
+aplicar a migration. Ela cria `profiles`, `sales` e `expenses`, ativa RLS e limita cada
+operação ao `auth.uid()` da usuária autenticada. O app não usa a chave `service_role`.
 
-## Build de produção
+## Build e testes
 
 ```bash
 npm run build
-npm start
-```
-
-## Dados
-
-Os dados (vendas, gastos) ficam salvos no `localStorage` do navegador — ainda não há
-backend nem sincronização entre dispositivos. O app inicia sem lançamentos de exemplo;
-os dados adicionados persistem entre sessões no mesmo navegador.
-
-Os totais e o resumo consideram o mês selecionado no fuso `America/Recife`. Use as setas
-do seletor mensal para consultar meses anteriores; o mês futuro não pode ser selecionado.
-
-Se o conteúdo salvo estiver corrompido, o app preserva uma cópia em
-`minha-mare:v1:backup` e mantém a chave original até um novo lançamento ser registrado.
-
-## Testes
-
-```bash
 npm run lint
 npm test
 ```
 
 ## Stack
 
-- Next.js 14 (App Router, client components)
-- TypeScript
-- Tailwind CSS (tokens de cor customizados em `tailwind.config.ts`)
-- lucide-react (ícones)
+- Next.js 15.5 (App Router e middleware)
+- React 18 e TypeScript
+- Supabase Auth, Postgres e Row Level Security
+- Tailwind CSS (tokens `mare-*` em `tailwind.config.ts`)
+- lucide-react
 - Fontes auto-hospedadas via `@fontsource/poppins` e `@fontsource/fraunces`

@@ -1,25 +1,7 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Waves, ArrowRight, Ship, Fish, ReceiptText } from "lucide-react";
-import { useStore } from "@/lib/store";
+import Link from "next/link";
+import { Waves, ArrowRight, Ship, ReceiptText } from "lucide-react";
 
 export default function WelcomePage() {
-  const { state, hydrated, finishOnboarding } = useStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (hydrated && state.onboarded) {
-      router.replace("/home");
-    }
-  }, [hydrated, state.onboarded, router]);
-
-  const handleStart = () => {
-    finishOnboarding();
-    router.push("/home");
-  };
-
   return (
     <div className="flex flex-col min-h-dvh px-6 pt-8 pb-8 bg-gradient-to-b from-mare-purpleLight/70 via-white to-white">
       <div className="flex items-center gap-2">
@@ -74,13 +56,19 @@ export default function WelcomePage() {
       </div>
 
       <div className="mt-auto pt-10">
-        <button
-          onClick={handleStart}
+        <Link
+          href="/cadastro"
           className="w-full flex items-center justify-center gap-2 rounded-full bg-mare-tealDark text-white font-semibold text-lg py-4 shadow-soft active:scale-[0.99] transition-transform"
         >
-          Começar
+          Criar minha conta
           <ArrowRight className="h-5 w-5" />
-        </button>
+        </Link>
+        <p className="mt-4 text-center text-sm text-mare-slate">
+          Já tem conta?{" "}
+          <Link href="/login" className="font-semibold text-mare-purple">
+            Entrar
+          </Link>
+        </p>
         <p className="mt-4 text-center text-[11px] tracking-widest text-mare-slate uppercase">
           Sua maré, seu trabalho, sua conta.
         </p>

@@ -2,48 +2,49 @@
 
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { AppState, Expense, Sale } from "./types";
+import { computeTotals, getCurrentMonth, SelectedMonth } from "./period";
+import { createClient } from "./supabase/client";
 import {
-  addExpense as addExpenseToState,
-  addSale as addSaleToState,
-  deleteExpense as deleteExpenseFromState,
-  deleteSale as deleteSaleFromState,
-  ExpenseUpdate,
-  SaleUpdate,
-  updateExpense as updateExpenseInState,
-  updateSale as updateSaleInState,
-} from "./state";
+  deleteExpenseById,
+  insertExpense,
+  listExpensesForMonth,
+  updateExpenseById,
+} from "./data/expenses";
 import {
-  computeTotals,
-  filterByMonth,
-  getCurrentMonth,
-  SelectedMonth,
-} from "./period";
-import {
-  backupCorruptedStoredState,
-  createEmptyAppState,
-  migrateStoredState,
-  shouldPersistStoredState,
-  STORAGE_KEY,
-} from "./storage";
+  deleteSaleById,
+  insertSale,
+  listSalesForMonth,
+  updateSaleById,
+} from "./data/sales";
+import { getProfile } from "./data/profile";
+import { ExpenseUpdate, SaleUpdate } from "./state";
+import type { Database } from "./supabase/database.types";
 
 interface StoreContextValue {
   state: AppState;
   hydrated: boolean;
+  loading: boolean;
+  error: string | null;
+  ready: boolean;
+  retry: () => void;
   selectedMonth: SelectedMonth;
   changeMonth: (offset: -1 | 1) => void;
-  addSale: (sale: Omit<Sale, "id">) => void;
-  updateSale: (id: string, sale: SaleUpdate) => void;
-  deleteSale: (id: string) => void;
-  addExpense: (expense: Omit<Expense, "id">) => void;
-  updateExpense: (id: string, expense: ExpenseUpdate) => void;
-  deleteExpense: (id: string) => void;
-  finishOnboarding: () => void;
+  selectMonthForDate: (date: string) => void;
+  addSale: (sale: Omit<Sale, "id">) => Promise<void>;
+  updateSale: (id: string, sale: SaleUpdate) => Promise<void>;
+  deleteSale: (id: string) => Promise<void>;
+  addExpense: (expense: Omit<Expense, "id">) => Promise<void>;
+  updateExpense: (id: string, expense: ExpenseUpdate) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
   totals: {
     totalVendido: number;
     totalGastosPesca: number;
@@ -55,45 +56,160 @@ interface StoreContextValue {
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
+function emptyState(): AppState {
+  return {
+    userName: "",
+    onboarded: false,
+    sales: [],
+    expenses: [],
+    metaAposentadoria: 0,
+    poupancaAposentadoria: 0,
+  };
+}
+
+function monthForDate(date: string): SelectedMonth {
+  const parsed = new Date(date);
+  if (!Number.isFinite(parsed.getTime())) {
+    throw new RangeError("A data do lançamento é inválida.");
+  }
+  return getCurrentMonth(parsed);
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(createEmptyAppState);
+  const clientRef = useRef<SupabaseClient<Database> | null>(null);
+  const [state, setState] = useState<AppState>(emptyState);
   const [selectedMonth, setSelectedMonth] = useState<SelectedMonth>(getCurrentMonth);
   const [hydrated, setHydrated] = useState(false);
-  const [initialReadOk, setInitialReadOk] = useState<boolean | null>(null);
-  const [hasUserChanges, setHasUserChanges] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [configurationError, setConfigurationError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const requestId = useRef(0);
 
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      const migration = migrateStoredState(raw);
-      setState(migration.state);
-      setInitialReadOk(migration.ok);
-
-      if (!migration.ok || migration.discarded > 0) {
-        try {
-          backupCorruptedStoredState(raw, window.localStorage);
-        } catch (error) {
-          console.error("Não foi possível preservar o backup dos dados locais.", error);
-        }
-      }
-    } catch (error) {
-      setInitialReadOk(false);
-      console.error("Não foi possível ler os dados locais.", error);
-    } finally {
-      setHydrated(true);
-    }
+  const getClient = useCallback(() => {
+    if (!clientRef.current) clientRef.current = createClient();
+    return clientRef.current;
   }, []);
 
   useEffect(() => {
-    if (!shouldPersistStoredState(initialReadOk, hasUserChanges)) return;
+    let client: SupabaseClient<Database>;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.error("Não foi possível salvar os dados locais.", error);
+      client = getClient();
+      setConfigurationError(false);
+    } catch (clientError) {
+      setError(
+        clientError instanceof Error
+          ? clientError.message
+          : "Configure o acesso ao Supabase no arquivo .env.local."
+      );
+      setConfigurationError(true);
+      setAuthChecked(true);
+      setHydrated(true);
+      setLoading(false);
+      return;
     }
-  }, [state, initialReadOk, hasUserChanges]);
 
-  const changeMonth = (offset: -1 | 1) => {
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user.id ?? null);
+      setSessionCheckFailed(false);
+      setAuthChecked(true);
+    });
+
+    setSessionCheckFailed(false);
+    client.auth
+      .getUser()
+      .then(({ data, error: authError }) => {
+        if (authError) throw authError;
+        setUserId(data.user?.id ?? null);
+        setSessionCheckFailed(false);
+        setAuthChecked(true);
+      })
+      .catch(() => {
+        setError("Não foi possível verificar sua sessão. Tente novamente.");
+        setSessionCheckFailed(true);
+        setHydrated(true);
+        setLoading(false);
+        setAuthChecked(true);
+      });
+
+    return () => subscription.unsubscribe();
+  }, [getClient, retryCount]);
+
+  useEffect(() => {
+    if (!authChecked || configurationError || sessionCheckFailed) return;
+    const currentRequest = ++requestId.current;
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    if (!userId) {
+      setState(emptyState());
+      setLoading(false);
+      setHydrated(true);
+      return () => {
+        active = false;
+      };
+    }
+
+    let client: SupabaseClient<Database>;
+    try {
+      client = getClient();
+    } catch (clientError) {
+      setError(
+        clientError instanceof Error
+          ? clientError.message
+          : "Configure o acesso ao Supabase no arquivo .env.local."
+      );
+      setConfigurationError(true);
+      setLoading(false);
+      setHydrated(true);
+      return;
+    }
+
+    Promise.all([
+      getProfile(client, userId),
+      listSalesForMonth(client, selectedMonth.year, selectedMonth.month),
+      listExpensesForMonth(client, selectedMonth.year, selectedMonth.month),
+    ])
+      .then(([profile, sales, expenses]) => {
+        if (!active || currentRequest !== requestId.current) return;
+        setState({
+          userName: profile.full_name,
+          onboarded: true,
+          sales,
+          expenses,
+          metaAposentadoria: profile.retirement_goal,
+          poupancaAposentadoria: profile.retirement_saved,
+        });
+        setHydrated(true);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!active || currentRequest !== requestId.current) return;
+        setError("Não foi possível carregar seus dados. Tente novamente.");
+        setHydrated(true);
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    authChecked,
+    configurationError,
+    getClient,
+    retryCount,
+    selectedMonth,
+    sessionCheckFailed,
+    userId,
+  ]);
+
+  const changeMonth = useCallback((offset: -1 | 1) => {
     setSelectedMonth((previous) => {
       const candidate =
         offset === -1
@@ -115,93 +231,139 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
       return candidate;
     });
-  };
+  }, []);
 
-  const addSale = (sale: Omit<Sale, "id">) => {
-    const newSale: Sale = { ...sale, id: crypto.randomUUID() };
-    const nextState = addSaleToState(state, newSale);
-    setState((previous) =>
-      previous === state ? nextState : addSaleToState(previous, newSale)
-    );
-    setSelectedMonth(getCurrentMonth(new Date(sale.date)));
-    setHasUserChanges(true);
-  };
+  const selectMonthForDate = useCallback((date: string) => {
+    setSelectedMonth(monthForDate(date));
+  }, []);
 
-  const updateSale = (id: string, sale: SaleUpdate) => {
-    const nextState = updateSaleInState(state, id, sale);
-    if (nextState === state) return;
-    setState((previous) =>
-      previous === state ? nextState : updateSaleInState(previous, id, sale)
-    );
-    setSelectedMonth(getCurrentMonth(new Date(sale.date)));
-    setHasUserChanges(true);
-  };
+  const addSale = useCallback(
+    async (sale: Omit<Sale, "id">) => {
+      try {
+        const inserted = await insertSale(getClient(), sale);
+        setState((current) => ({ ...current, sales: [inserted, ...current.sales] }));
+        selectMonthForDate(inserted.date);
+        setError(null);
+      } catch {
+        setError("Não foi possível salvar a venda. Tente novamente.");
+        throw new Error("Não foi possível salvar a venda. Tente novamente.");
+      }
+    },
+    [getClient, selectMonthForDate]
+  );
 
-  const deleteSale = (id: string) => {
-    const nextState = deleteSaleFromState(state, id);
-    if (nextState === state) return;
-    setState((previous) =>
-      previous === state ? nextState : deleteSaleFromState(previous, id)
-    );
-    setHasUserChanges(true);
-  };
+  const updateSale = useCallback(
+    async (id: string, sale: SaleUpdate) => {
+      try {
+        const updated = await updateSaleById(getClient(), id, sale);
+        setState((current) => ({
+          ...current,
+          sales: [updated, ...current.sales.filter((item) => item.id !== id)],
+        }));
+        selectMonthForDate(updated.date);
+        setError(null);
+      } catch {
+        setError("Não foi possível atualizar a venda. Tente novamente.");
+        throw new Error("Não foi possível atualizar a venda. Tente novamente.");
+      }
+    },
+    [getClient, selectMonthForDate]
+  );
 
-  const addExpense = (expense: Omit<Expense, "id">) => {
-    const newExpense: Expense = { ...expense, id: crypto.randomUUID() };
-    const nextState = addExpenseToState(state, newExpense);
-    setState((previous) =>
-      previous === state ? nextState : addExpenseToState(previous, newExpense)
-    );
-    setSelectedMonth(getCurrentMonth(new Date(expense.date)));
-    setHasUserChanges(true);
-  };
+  const deleteSale = useCallback(
+    async (id: string) => {
+      try {
+        await deleteSaleById(getClient(), id);
+        setState((current) => ({
+          ...current,
+          sales: current.sales.filter((item) => item.id !== id),
+        }));
+        setError(null);
+      } catch {
+        setError("Não foi possível excluir a venda. Tente novamente.");
+        throw new Error("Não foi possível excluir a venda. Tente novamente.");
+      }
+    },
+    [getClient]
+  );
 
-  const updateExpense = (id: string, expense: ExpenseUpdate) => {
-    const nextState = updateExpenseInState(state, id, expense);
-    if (nextState === state) return;
-    setState((previous) =>
-      previous === state ? nextState : updateExpenseInState(previous, id, expense)
-    );
-    setSelectedMonth(getCurrentMonth(new Date(expense.date)));
-    setHasUserChanges(true);
-  };
+  const addExpense = useCallback(
+    async (expense: Omit<Expense, "id">) => {
+      try {
+        const inserted = await insertExpense(getClient(), expense);
+        setState((current) => ({
+          ...current,
+          expenses: [inserted, ...current.expenses],
+        }));
+        selectMonthForDate(inserted.date);
+        setError(null);
+      } catch {
+        setError("Não foi possível salvar o gasto. Tente novamente.");
+        throw new Error("Não foi possível salvar o gasto. Tente novamente.");
+      }
+    },
+    [getClient, selectMonthForDate]
+  );
 
-  const deleteExpense = (id: string) => {
-    const nextState = deleteExpenseFromState(state, id);
-    if (nextState === state) return;
-    setState((previous) =>
-      previous === state ? nextState : deleteExpenseFromState(previous, id)
-    );
-    setHasUserChanges(true);
-  };
+  const updateExpense = useCallback(
+    async (id: string, expense: ExpenseUpdate) => {
+      try {
+        const updated = await updateExpenseById(getClient(), id, expense);
+        setState((current) => ({
+          ...current,
+          expenses: [
+            updated,
+            ...current.expenses.filter((item) => item.id !== id),
+          ],
+        }));
+        selectMonthForDate(updated.date);
+        setError(null);
+      } catch {
+        setError("Não foi possível atualizar o gasto. Tente novamente.");
+        throw new Error("Não foi possível atualizar o gasto. Tente novamente.");
+      }
+    },
+    [getClient, selectMonthForDate]
+  );
 
-  const finishOnboarding = () => {
-    setState((prev) => ({ ...prev, onboarded: true }));
-    setHasUserChanges(true);
-  };
+  const deleteExpense = useCallback(
+    async (id: string) => {
+      try {
+        await deleteExpenseById(getClient(), id);
+        setState((current) => ({
+          ...current,
+          expenses: current.expenses.filter((item) => item.id !== id),
+        }));
+        setError(null);
+      } catch {
+        setError("Não foi possível excluir o gasto. Tente novamente.");
+        throw new Error("Não foi possível excluir o gasto. Tente novamente.");
+      }
+    },
+    [getClient]
+  );
 
-  const totals = useMemo(() => {
-    const sales = filterByMonth(state.sales, selectedMonth.year, selectedMonth.month);
-    const expenses = filterByMonth(
-      state.expenses,
-      selectedMonth.year,
-      selectedMonth.month
-    );
-    return computeTotals(sales, expenses);
-  }, [state.sales, state.expenses, selectedMonth]);
+  const totals = useMemo(
+    () => computeTotals(state.sales, state.expenses),
+    [state.sales, state.expenses]
+  );
 
   const value: StoreContextValue = {
     state,
     hydrated,
+    loading,
+    error,
+    ready: hydrated && !loading && error === null,
+    retry: () => setRetryCount((count) => count + 1),
     selectedMonth,
     changeMonth,
+    selectMonthForDate,
     addSale,
     updateSale,
     deleteSale,
     addExpense,
     updateExpense,
     deleteExpense,
-    finishOnboarding,
     totals,
   };
 
@@ -209,7 +371,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useStore(): StoreContextValue {
-  const ctx = useContext(StoreContext);
-  if (!ctx) throw new Error("useStore must be used within a StoreProvider");
-  return ctx;
+  const context = useContext(StoreContext);
+  if (!context) throw new Error("useStore must be used within a StoreProvider");
+  return context;
 }

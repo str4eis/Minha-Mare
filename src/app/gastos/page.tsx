@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import DataStatus from "@/components/DataStatus";
 import Header from "@/components/Header";
 import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
@@ -26,7 +27,7 @@ function GastosContent() {
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const historyHeadingRef = useRef<HTMLHeadingElement | null>(null);
-  const { state, totals, selectedMonth, hydrated, deleteExpense } = useStore();
+  const { state, totals, selectedMonth, hydrated, ready, deleteExpense } = useStore();
 
   const meta = tab === "pesca" ? fishingExpenseMeta : homeExpenseMeta;
   const total = tab === "pesca" ? totals.totalGastosPesca : totals.totalGastosCasa;
@@ -85,6 +86,7 @@ function GastosContent() {
       <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
+        <DataStatus />
         <h1 className="text-2xl font-semibold">Gastos</h1>
 
         <div className="mt-4 flex rounded-full bg-mare-card p-1">
@@ -131,7 +133,7 @@ function GastosContent() {
               tab === "pesca" ? "text-mare-tealDark" : "text-mare-yellowDark"
             )}
           >
-            {hydrated ? formatBRL(total) : "—"}
+            {ready ? formatBRL(total) : "—"}
           </p>
         </div>
 
@@ -154,7 +156,7 @@ function GastosContent() {
                     {categoryMeta.label}
                   </p>
                   <p className="text-xs text-mare-slate mt-0.5">
-                    {!hydrated
+                    {!ready
                       ? "—"
                       : spent > 0
                         ? formatBRL(spent)
@@ -200,7 +202,7 @@ function GastosContent() {
             ))}
           </select>
         </div>
-        {hydrated && hasActiveFilters && (
+        {ready && hasActiveFilters && (
           <p className="mt-3 text-sm text-mare-slate">
             Total listado: {formatBRL(listedTotal)}
           </p>
@@ -214,14 +216,14 @@ function GastosContent() {
           Lançamentos
         </h2>
         <ul className="mt-2 divide-y divide-black/5">
-          {hydrated && sortedExpenses.length === 0 && (
+          {ready && sortedExpenses.length === 0 && (
             <li className="py-4 text-sm text-mare-slate">
               {hasActiveFilters
                 ? "Nenhum resultado para a busca."
                 : `Nenhum lançamento em ${monthLabel}.`}
             </li>
           )}
-          {hydrated &&
+          {ready &&
             sortedExpenses.map((expense) => {
               const categoryMeta = meta[expense.category as keyof typeof meta];
               const Icon = categoryMeta?.icon;
@@ -275,7 +277,9 @@ function GastosContent() {
         description="Este lançamento será removido permanentemente."
         onCancel={() => setDeletingExpenseId(null)}
         onConfirm={() => {
-          if (deletingExpenseId) deleteExpense(deletingExpenseId);
+          if (deletingExpenseId) {
+            void deleteExpense(deletingExpenseId).catch(() => undefined);
+          }
           setDeletingExpenseId(null);
         }}
         returnFocusRef={returnFocusRef}

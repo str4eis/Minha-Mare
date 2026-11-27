@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import DataStatus from "@/components/DataStatus";
 import Header from "@/components/Header";
 import MonthPicker from "@/components/MonthPicker";
 import { useStore } from "@/lib/store";
@@ -13,7 +14,7 @@ import { saleCategoryMeta } from "@/lib/categories";
 import { filterItems } from "@/lib/filters";
 
 export default function VendasPage() {
-  const { state, totals, selectedMonth, hydrated, deleteSale } = useStore();
+  const { state, totals, selectedMonth, hydrated, ready, deleteSale } = useStore();
   const [query, setQuery] = useState("");
   const [deletingSaleId, setDeletingSaleId] = useState<string | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
@@ -41,6 +42,7 @@ export default function VendasPage() {
       <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
+        <DataStatus />
         <h1 className="text-2xl font-semibold">Vendas</h1>
         <p className="text-mare-slate mt-1">Tudo o que você já vendeu na maré.</p>
 
@@ -48,7 +50,7 @@ export default function VendasPage() {
           <div>
             <p className="text-sm text-white/75">Total vendido em {monthLabel}</p>
             <p className="text-2xl font-semibold mt-1">
-              {hydrated ? formatBRL(totals.totalVendido) : "—"}
+              {ready ? formatBRL(totals.totalVendido) : "—"}
             </p>
           </div>
           <Link
@@ -73,7 +75,7 @@ export default function VendasPage() {
             className="w-full bg-transparent text-sm placeholder:text-mare-slate focus:outline-none"
           />
         </div>
-        {hydrated && hasSearch && (
+        {ready && hasSearch && (
           <p className="mt-3 text-sm text-mare-slate">
             Total listado: {formatBRL(listedTotal)}
           </p>
@@ -87,14 +89,14 @@ export default function VendasPage() {
           Histórico de vendas
         </h2>
         <ul className="mt-2 divide-y divide-black/5">
-          {hydrated && sortedSales.length === 0 && (
+          {ready && sortedSales.length === 0 && (
             <li className="py-6 text-center text-sm text-mare-slate">
               {hasSearch
                 ? "Nenhum resultado para a busca."
                 : `Nenhum lançamento em ${monthLabel}.`}
             </li>
           )}
-          {hydrated &&
+          {ready &&
             sortedSales.map((sale) => {
               const meta = saleCategoryMeta[sale.category];
               const Icon = meta.icon;
@@ -147,7 +149,7 @@ export default function VendasPage() {
         description="Este lançamento será removido permanentemente."
         onCancel={() => setDeletingSaleId(null)}
         onConfirm={() => {
-          if (deletingSaleId) deleteSale(deletingSaleId);
+          if (deletingSaleId) void deleteSale(deletingSaleId).catch(() => undefined);
           setDeletingSaleId(null);
         }}
         returnFocusRef={returnFocusRef}

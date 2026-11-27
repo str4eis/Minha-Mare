@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Waves, UserRound, X } from "lucide-react";
+import { Waves, X } from "lucide-react";
 
 interface HeaderProps {
   variant?: "profile" | "close";
@@ -17,14 +17,7 @@ export default function Header({ variant = "profile", closeHref = "/vendas" }: H
           Minha Maré
         </span>
       </Link>
-      {variant === "profile" ? (
-        <button
-          aria-label="Perfil"
-          className="h-9 w-9 rounded-full flex items-center justify-center text-mare-purple hover:bg-mare-purpleLight transition-colors"
-        >
-          <UserRound className="h-6 w-6" strokeWidth={1.8} />
-        </button>
-      ) : (
+      {variant === "close" && (
         <Link
           href={closeHref}
           aria-label="Fechar"

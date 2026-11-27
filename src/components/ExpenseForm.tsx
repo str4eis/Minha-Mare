@@ -45,6 +45,8 @@ export default function ExpenseForm({
   const [today, setToday] = useState("");
   const [date, setDate] = useState(expense ? isoToDateInput(expense.date) : "");
   const [dateError, setDateError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const todayDate = isoToDateInput(new Date().toISOString());
@@ -53,10 +55,10 @@ export default function ExpenseForm({
   }, [expense]);
 
   const numericValue = parseMoneyInput(value);
-  const canSave = numericValue !== null && date !== "" && today !== "";
+  const canSave = numericValue !== null && date !== "" && today !== "" && !saving;
   const closeHref = `/gastos?tab=${kind}`;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!canSave || numericValue === null) return;
 
     let occurredAt: string;
@@ -76,9 +78,21 @@ export default function ExpenseForm({
       date: occurredAt,
     };
 
-    if (expense) updateExpense(expense.id, expenseData);
-    else addExpense(expenseData);
-    router.push(closeHref);
+    setSaving(true);
+    setSaveError("");
+    try {
+      if (expense) await updateExpense(expense.id, expenseData);
+      else await addExpense(expenseData);
+      router.push(closeHref);
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível salvar o gasto. Tente novamente."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -181,6 +195,12 @@ export default function ExpenseForm({
           </div>
         </div>
 
+        {saveError && (
+          <p className="mt-4 text-sm text-[#B23B5C]" role="alert">
+            {saveError}
+          </p>
+        )}
+
         <button
           type="button"
           onClick={handleSave}
@@ -193,7 +213,7 @@ export default function ExpenseForm({
           )}
         >
           <CircleCheck className="h-5 w-5" />
-          {expense ? "Salvar alterações" : "Salvar Gasto"}
+          {saving ? "Salvando..." : expense ? "Salvar alterações" : "Salvar Gasto"}
         </button>
       </main>
 

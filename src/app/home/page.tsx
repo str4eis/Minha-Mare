@@ -1,42 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { TrendingUp, Wallet, Home as HomeIcon, BarChart3, Target } from "lucide-react";
+import { TrendingUp, Wallet, Home as HomeIcon, BarChart3 } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import MonthPicker from "@/components/MonthPicker";
+import DataStatus from "@/components/DataStatus";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { saleCategoryMeta } from "@/lib/categories";
-import { filterByMonth } from "@/lib/period";
 
 export default function HomePage() {
-  const { state, totals, selectedMonth, hydrated } = useStore();
+  const { state, totals, selectedMonth, hydrated, ready } = useStore();
 
-  const totalActivity = totals.totalVendido + totals.totalGastos;
+  const totalActivity = ready ? totals.totalVendido + totals.totalGastos : 0;
   const vendasShare =
     totalActivity > 0
       ? Math.round((totals.totalVendido / totalActivity) * 100)
       : 0;
 
-  const aposentadoriaPct =
-    hydrated && state.metaAposentadoria > 0
-      ? Math.min(
-          100,
-          Math.round((state.poupancaAposentadoria / state.metaAposentadoria) * 100)
-        )
-      : 0;
-
   const monthLabel = hydrated
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
-  const recentSales = filterByMonth(
-    [...state.sales].sort(
+  const recentSales = [...state.sales]
+    .sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    ),
-    selectedMonth.year,
-    selectedMonth.month
-  ).slice(0, 3);
+    )
+    .slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-dvh bg-white">
@@ -44,6 +34,7 @@ export default function HomePage() {
       <MonthPicker />
 
       <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4">
+        <DataStatus />
         <h1 className="text-[26px] font-semibold leading-tight">
           {state.userName ? `Olá, ${state.userName}!` : "Olá!"}
         </h1>
@@ -60,19 +51,19 @@ export default function HomePage() {
             <div>
               <p className="text-xs text-mare-slate">Vendas</p>
               <p className="mt-0.5 font-semibold text-mare-tealDark">
-                {hydrated ? formatBRL(totals.totalVendido) : "—"}
+                {ready ? formatBRL(totals.totalVendido) : "—"}
               </p>
             </div>
             <div>
               <p className="text-xs text-mare-slate">Gastos</p>
               <p className="mt-0.5 font-semibold text-[#B23B5C]">
-                {hydrated ? formatBRL(totals.totalGastos) : "—"}
+                {ready ? formatBRL(totals.totalGastos) : "—"}
               </p>
             </div>
             <div>
               <p className="text-xs text-mare-slate">Resultado</p>
               <p className="mt-0.5 font-semibold text-mare-purple">
-                {hydrated ? formatBRL(totals.resultado) : "—"}
+                {ready ? formatBRL(totals.resultado) : "—"}
               </p>
             </div>
           </div>
@@ -136,29 +127,6 @@ export default function HomePage() {
           </Link>
         </section>
 
-        {/* Aposentadoria */}
-        <section className="mt-4 rounded-xl2 border border-black/5 p-4 flex items-center gap-3 shadow-card">
-          <span className="h-11 w-11 rounded-full bg-mare-purpleLight flex items-center justify-center shrink-0">
-            <Target className="h-5 w-5 text-mare-purple" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-mare-ink">Minha Aposentadoria</p>
-            <p className="text-sm text-mare-slate">
-              {!hydrated
-                ? "—"
-                : state.metaAposentadoria > 0
-                ? `Você atingiu ${aposentadoriaPct}% da sua meta mensal.`
-                : "Sua meta mensal ainda não foi definida."}
-            </p>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-mare-purpleLight overflow-hidden">
-              <div
-                className="h-full rounded-full bg-mare-purple"
-                style={{ width: `${aposentadoriaPct}%` }}
-              />
-            </div>
-          </div>
-        </section>
-
         {/* Vendas recentes */}
         <section className="mt-5">
           <div className="flex items-center justify-between">
@@ -168,12 +136,12 @@ export default function HomePage() {
             </Link>
           </div>
           <ul className="mt-2 divide-y divide-black/5">
-            {hydrated && recentSales.length === 0 && (
+            {ready && recentSales.length === 0 && (
               <li className="py-4 text-sm text-mare-slate">
                 Nenhuma venda em {monthLabel}.
               </li>
             )}
-            {hydrated && recentSales.map((sale) => {
+            {ready && recentSales.map((sale) => {
               const meta = saleCategoryMeta[sale.category];
               const Icon = meta.icon;
               return (
