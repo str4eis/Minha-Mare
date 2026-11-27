@@ -7,6 +7,17 @@ export function formatBRL(value: number): string {
   });
 }
 
+export function formatMoneyInput(input: string): string {
+  const digits = input.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+  if (!digits) return "";
+
+  const padded = digits.padStart(3, "0");
+  const whole = padded
+    .slice(0, -2)
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${whole},${padded.slice(-2)}`;
+}
+
 export function formatDateShort(iso: string, now = new Date()): string {
   const d = new Date(iso);
   const isToday = isoToDateInput(iso) === isoToDateInput(now.toISOString());
@@ -40,10 +51,17 @@ export function currentMonthLabel(year?: number, month?: number): string {
 }
 
 export function parseMoneyInput(input: string, allowZero = false): number | null {
-  const normalized = input.trim();
-  if (!/^\d+(?:[.,]\d{1,2})?$/.test(normalized)) return null;
+  let normalized = input.trim();
+  if (normalized.includes(",")) {
+    if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+),\d{1,2}$/.test(normalized)) {
+      return null;
+    }
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  } else if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
+    return null;
+  }
 
-  const value = Number(normalized.replace(",", "."));
+  const value = Number(normalized);
   if (!Number.isFinite(value) || value < 0 || (!allowZero && value === 0)) {
     return null;
   }

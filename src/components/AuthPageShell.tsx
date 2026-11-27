@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
+import LegalLinks from "@/components/LegalLinks";
 
 interface AuthPageShellProps {
   title: string;
@@ -36,6 +37,9 @@ export default function AuthPageShell({
         <p className="mt-2 text-sm leading-relaxed text-mare-slate">{description}</p>
         <div className="mt-6">{children}</div>
       </section>
+      <footer className="mt-auto pt-8 text-xs text-mare-slate">
+        <LegalLinks />
+      </footer>
     </main>
   );
 }

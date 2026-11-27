@@ -6,6 +6,7 @@ import { CircleCheck } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import CategoryIcon from "@/components/CategoryIcon";
 import Header from "@/components/Header";
+import MoneyInput from "@/components/MoneyInput";
 import { useStore } from "@/lib/store";
 import { fishingExpenseMeta, homeExpenseMeta } from "@/lib/categories";
 import {
@@ -16,7 +17,7 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { dateInputToISO, isoToDateInput } from "@/lib/period";
-import { parseMoneyInput } from "@/lib/format";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/format";
 
 type ExpenseCategory = FishingExpenseCategory | HomeExpenseCategory;
 
@@ -41,7 +42,7 @@ export default function ExpenseForm({
   );
   const [description, setDescription] = useState(expense?.description ?? "");
   const [value, setValue] = useState(
-    expense ? expense.value.toFixed(2).replace(".", ",") : ""
+    expense ? formatMoneyInput(expense.value.toFixed(2)) : ""
   );
   const [today, setToday] = useState("");
   const [date, setDate] = useState(expense ? isoToDateInput(expense.date) : "");
@@ -184,11 +185,10 @@ export default function ExpenseForm({
           </label>
           <div className="mt-2 flex items-center gap-2">
             <span className="text-lg text-mare-slate">R$</span>
-            <input
+            <MoneyInput
               id="expense-value"
               value={value}
-              onChange={(event) => setValue(event.target.value)}
-              inputMode="decimal"
+              onValueChange={setValue}
               placeholder="0,00"
               className="w-full bg-transparent text-2xl font-semibold placeholder:text-mare-slate focus:outline-none"
             />

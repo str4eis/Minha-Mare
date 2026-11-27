@@ -6,11 +6,12 @@ import { CircleCheck, Minus, Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import CategoryIcon from "@/components/CategoryIcon";
 import Header from "@/components/Header";
+import MoneyInput from "@/components/MoneyInput";
 import { useStore } from "@/lib/store";
 import { saleCategoryMeta } from "@/lib/categories";
 import { cn } from "@/lib/cn";
 import { dateInputToISO, isoToDateInput } from "@/lib/period";
-import { parseMoneyInput } from "@/lib/format";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/format";
 import { Sale, SaleCategory } from "@/lib/types";
 
 const categories: SaleCategory[] = [
@@ -34,7 +35,7 @@ export default function SaleForm({ sale }: SaleFormProps) {
   const [quantity, setQuantity] = useState(sale?.quantity ?? 1);
   const [buyer, setBuyer] = useState(sale?.buyer ?? "");
   const [value, setValue] = useState(
-    sale ? sale.value.toFixed(2).replace(".", ",") : ""
+    sale ? formatMoneyInput(sale.value.toFixed(2)) : ""
   );
   const [today, setToday] = useState("");
   const [date, setDate] = useState(sale ? isoToDateInput(sale.date) : "");
@@ -219,11 +220,10 @@ export default function SaleForm({ sale }: SaleFormProps) {
           </label>
           <div className="mt-2 flex items-center gap-2">
             <span className="text-lg text-mare-slate">R$</span>
-            <input
+            <MoneyInput
               id="sale-value"
               value={value}
-              onChange={(event) => setValue(event.target.value)}
-              inputMode="decimal"
+              onValueChange={setValue}
               placeholder="0,00"
               className="w-full bg-transparent text-2xl font-semibold placeholder:text-mare-slate focus:outline-none"
             />

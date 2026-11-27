@@ -5,7 +5,11 @@ import {
   insertImportedExpenses,
   insertImportedSales,
 } from "@/lib/data/local-import";
-import { LocalImportData, parseLocalImport } from "@/lib/local-import";
+import {
+  hasImportableLocalData,
+  LocalImportData,
+  parseLocalImport,
+} from "@/lib/local-import";
 import { useStore } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
 import { STORAGE_KEY } from "@/lib/storage";
@@ -96,7 +100,7 @@ export default function LocalImportPrompt() {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const data = parseLocalImport(raw);
-      if (!data || data.candidateCount === 0) return;
+      if (!data || !hasImportableLocalData(data)) return;
       setPrompt({ raw, data });
     } catch {
       setError("Não foi possível ler os dados locais neste navegador.");

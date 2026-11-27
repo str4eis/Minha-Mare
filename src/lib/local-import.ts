@@ -14,6 +14,10 @@ export interface LocalImportData {
   candidateCount: number;
 }
 
+export function hasImportableLocalData(data: LocalImportData): boolean {
+  return data.sales.length > 0 || data.expenses.length > 0;
+}
+
 const demoSaleIds = new Set(["s1", "s2", "s3", "s4", "s5"]);
 const demoExpenseIds = new Set([
   "e1",

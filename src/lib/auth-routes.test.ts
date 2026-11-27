@@ -24,4 +24,12 @@ describe("auth route helpers", () => {
     expect(isAuthPath("/redefinir-senha")).toBe(false);
     expect(isAuthPath("/auth/callback")).toBe(false);
   });
+
+  it.each(["/privacidade", "/termos"])(
+    "keeps %s public and outside authentication routes",
+    (pathname) => {
+      expect(isProtectedPath(pathname)).toBe(false);
+      expect(isAuthPath(pathname)).toBe(false);
+    }
+  );
 });

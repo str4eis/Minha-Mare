@@ -1,9 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { formatDateShort, parseMoneyInput } from "./format";
+import { formatDateShort, formatMoneyInput, parseMoneyInput } from "./format";
+
+describe("formatMoneyInput", () => {
+  it.each([
+    ["1", "0,01"],
+    ["1234", "12,34"],
+    ["1234567", "12.345,67"],
+    ["000", "0,00"],
+    ["", ""],
+  ])("formats %s as %s while typing", (input, expected) => {
+    expect(formatMoneyInput(input)).toBe(expected);
+  });
+});
 
 describe("parseMoneyInput", () => {
   it.each(["12,34", "12.34"])("accepts %s as a decimal amount", (input) => {
     expect(parseMoneyInput(input)).toBe(12.34);
+  });
+
+  it("accepts the grouped value produced by the input mask", () => {
+    expect(parseMoneyInput("1.234,56")).toBe(1234.56);
   });
 
   describe("formatDateShort", () => {

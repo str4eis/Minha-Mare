@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import DataStatus from "@/components/DataStatus";
 import Header from "@/components/Header";
+import MoneyInput from "@/components/MoneyInput";
 import { useStore } from "@/lib/store";
-import { parseMoneyInput } from "@/lib/format";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/format";
 import { validateProfileForm } from "@/lib/profile-validation";
 import { createClient } from "@/lib/supabase/client";
 
 function formatAmount(value: number): string {
-  return value.toFixed(2).replace(".", ",");
+  return formatMoneyInput(value.toFixed(2));
 }
 
 export default function PerfilPage() {
@@ -169,11 +170,10 @@ export default function PerfilPage() {
                 </label>
                 <div className="mt-2 flex items-center gap-2">
                   <span className="text-mare-slate">R$</span>
-                  <input
+                  <MoneyInput
                     id="retirement-goal"
-                    inputMode="decimal"
                     value={retirementGoal}
-                    onChange={(event) => setRetirementGoal(event.target.value)}
+                    onValueChange={setRetirementGoal}
                     className="w-full bg-transparent text-lg focus:outline-none"
                   />
                 </div>
@@ -185,11 +185,10 @@ export default function PerfilPage() {
                 </label>
                 <div className="mt-2 flex items-center gap-2">
                   <span className="text-mare-slate">R$</span>
-                  <input
+                  <MoneyInput
                     id="retirement-saved"
-                    inputMode="decimal"
                     value={retirementSaved}
-                    onChange={(event) => setRetirementSaved(event.target.value)}
+                    onValueChange={setRetirementSaved}
                     className="w-full bg-transparent text-lg focus:outline-none"
                   />
                 </div>

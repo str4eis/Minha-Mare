@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  hasImportableLocalData,
   isSeedExpense,
   isSeedSale,
   parseLocalImport,
@@ -51,6 +52,8 @@ describe("parseLocalImport", () => {
       ignoredCount: 0,
       candidateCount: 2,
     });
+    if (!result) throw new Error("Expected parsed local data");
+    expect(hasImportableLocalData(result)).toBe(true);
   });
 
   it("skips invalid values, categories, units, kinds, and dates", () => {
@@ -92,5 +95,18 @@ describe("parseLocalImport", () => {
     expect(result?.candidateCount).toBe(0);
     expect(result?.sales).toEqual([]);
     expect(result?.expenses).toEqual([]);
+  });
+
+  it("does not offer import when every non-seed record is invalid", () => {
+    const result = parseLocalImport(
+      JSON.stringify({
+        sales: [{ ...realSale, category: "categoria-invalida" }],
+        expenses: [{ ...realExpense, category: "categoria-invalida" }],
+      })
+    );
+
+    if (!result) throw new Error("Expected parsed local data");
+    expect(result.ignoredCount).toBe(2);
+    expect(hasImportableLocalData(result)).toBe(false);
   });
 });
