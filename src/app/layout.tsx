@@ -7,6 +7,7 @@ import "./globals.css";
 import { StoreProvider } from "@/lib/store";
 import LocalImportPrompt from "@/components/ui/LocalImportPrompt";
 import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
+import VLibrasWidget from "@/components/accessibility/VLibrasWidget";
 
 export const metadata: Metadata = {
   title: "Minha Maré",
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className="font-sans text-mare-ink antialiased">
         <StoreProvider>
+          <VLibrasWidget />
           <div className="min-h-dvh w-full bg-mare-bg flex justify-center">
             <div className="relative flex min-h-dvh w-full max-w-md flex-col bg-white shadow-soft">
               <LocalImportPrompt />

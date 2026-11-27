@@ -46,3 +46,10 @@ body {
 .animate-ripple {
   animation: ripple 2.4s ease-out infinite;
 }
+
+@media (max-width: 640px) {
+  div[vw].enabled {
+    bottom: calc(6rem + env(safe-area-inset-bottom)) !important;
+    right: 0.5rem !important;
+  }
+}
