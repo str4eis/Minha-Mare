@@ -52,6 +52,17 @@ describe("database mappers", () => {
     expect(result).toEqual({ ...expense, id: "expense-id" });
   });
 
+  it("preserves stable IDs for retryable local imports", () => {
+    expect(toSaleInsert(sale, "00000000-0000-4000-8000-000000000001")).toMatchObject({
+      id: "00000000-0000-4000-8000-000000000001",
+      occurred_at: sale.date,
+    });
+    expect(toExpenseInsert(expense, "00000000-0000-4000-8000-000000000002")).toMatchObject({
+      id: "00000000-0000-4000-8000-000000000002",
+      occurred_at: expense.date,
+    });
+  });
+
   it("rejects malformed or invalid database rows", () => {
     expect(() => mapSaleRow(null)).toThrow();
     expect(() => mapSaleRow({ id: "x", value: "NaN" })).toThrow();

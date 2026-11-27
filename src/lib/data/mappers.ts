@@ -163,8 +163,12 @@ export function mapProfileRow(value: unknown): Pick<
   };
 }
 
-export function toSaleInsert(sale: Omit<Sale, "id">): SaleInsert {
+export function toSaleInsert(
+  sale: Omit<Sale, "id">,
+  id?: string
+): SaleInsert {
   return {
+    ...(id ? { id } : {}),
     category: sale.category,
     buyer: sale.buyer,
     quantity: sale.quantity,
@@ -174,8 +178,12 @@ export function toSaleInsert(sale: Omit<Sale, "id">): SaleInsert {
   };
 }
 
-export function toExpenseInsert(expense: Omit<Expense, "id">): ExpenseInsert {
+export function toExpenseInsert(
+  expense: Omit<Expense, "id">,
+  id?: string
+): ExpenseInsert {
   return {
+    ...(id ? { id } : {}),
     kind: expense.kind,
     category: expense.category,
     description: expense.description,

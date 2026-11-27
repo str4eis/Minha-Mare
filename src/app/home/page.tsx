@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { TrendingUp, Wallet, Home as HomeIcon, BarChart3 } from "lucide-react";
+import {
+  TrendingUp,
+  Wallet,
+  Home as HomeIcon,
+  BarChart3,
+  Target,
+} from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import MonthPicker from "@/components/MonthPicker";
@@ -9,6 +15,7 @@ import DataStatus from "@/components/DataStatus";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/format";
 import { saleCategoryMeta } from "@/lib/categories";
+import { calculateRetirementProgress } from "@/lib/retirement";
 
 export default function HomePage() {
   const { state, totals, selectedMonth, hydrated, ready } = useStore();
@@ -22,6 +29,13 @@ export default function HomePage() {
   const monthLabel = hydrated
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
+  const retirementProgress = calculateRetirementProgress(
+    state.metaAposentadoria,
+    state.poupancaAposentadoria
+  );
+  const retirementPercentage = new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: 1,
+  }).format(retirementProgress.percentage);
   const recentSales = [...state.sales]
     .sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -125,6 +139,46 @@ export default function HomePage() {
               Resultado
             </span>
           </Link>
+        </section>
+
+        <section className="mt-4 rounded-xl2 border border-black/5 p-4 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mare-purpleLight">
+              <Target className="h-5 w-5 text-mare-purple" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-mare-ink">Minha Aposentadoria</p>
+              {!ready ? (
+                <p className="text-sm text-mare-slate">—</p>
+              ) : state.metaAposentadoria === 0 ? (
+                <Link
+                  href="/perfil"
+                  className="text-sm font-medium text-mare-purple hover:underline"
+                >
+                  Defina sua meta
+                </Link>
+              ) : (
+                <p className="text-sm text-mare-slate">
+                  {retirementPercentage}% da meta guardada
+                </p>
+              )}
+            </div>
+          </div>
+          {ready && state.metaAposentadoria > 0 && (
+            <div
+              className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-mare-purpleLight"
+              role="progressbar"
+              aria-label="Progresso da meta de aposentadoria"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={retirementProgress.barPercentage}
+            >
+              <div
+                className="h-full rounded-full bg-mare-purple"
+                style={{ width: `${retirementProgress.barPercentage}%` }}
+              />
+            </div>
+          )}
         </section>
 
         {/* Vendas recentes */}

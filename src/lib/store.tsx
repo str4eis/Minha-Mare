@@ -25,17 +25,20 @@ import {
   listSalesForMonth,
   updateSaleById,
 } from "./data/sales";
-import { getProfile } from "./data/profile";
+import { getProfile, upsertProfile } from "./data/profile";
 import { ExpenseUpdate, SaleUpdate } from "./state";
 import type { Database } from "./supabase/database.types";
 
 interface StoreContextValue {
   state: AppState;
+  userId: string | null;
+  userEmail: string;
   hydrated: boolean;
   loading: boolean;
   error: string | null;
   ready: boolean;
   retry: () => void;
+  refreshData: () => void;
   selectedMonth: SelectedMonth;
   changeMonth: (offset: -1 | 1) => void;
   selectMonthForDate: (date: string) => void;
@@ -45,6 +48,12 @@ interface StoreContextValue {
   addExpense: (expense: Omit<Expense, "id">) => Promise<void>;
   updateExpense: (id: string, expense: ExpenseUpdate) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  saveProfile: (profile: {
+    full_name: string;
+    retirement_goal: number;
+    retirement_saved: number;
+  }) => Promise<void>;
+  clearUserData: () => void;
   totals: {
     totalVendido: number;
     totalGastosPesca: number;
@@ -77,21 +86,39 @@ function monthForDate(date: string): SelectedMonth {
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const clientRef = useRef<SupabaseClient<Database> | null>(null);
+  const activeUserId = useRef<string | null>(null);
   const [state, setState] = useState<AppState>(emptyState);
   const [selectedMonth, setSelectedMonth] = useState<SelectedMonth>(getCurrentMonth);
   const [hydrated, setHydrated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [configurationError, setConfigurationError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [dataRefreshCount, setDataRefreshCount] = useState(0);
   const requestId = useRef(0);
 
   const getClient = useCallback(() => {
     if (!clientRef.current) clientRef.current = createClient();
     return clientRef.current;
+  }, []);
+
+  const acceptUser = useCallback((user: {
+    id: string;
+    email?: string;
+  } | null) => {
+    const nextUserId = user?.id ?? null;
+    if (activeUserId.current !== nextUserId) {
+      activeUserId.current = nextUserId;
+      setState(emptyState());
+      setError(null);
+      setHydrated(false);
+    }
+    setUserId(nextUserId);
+    setUserEmail(user?.email ?? "");
   }, []);
 
   useEffect(() => {
@@ -115,7 +142,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user.id ?? null);
+      acceptUser(session?.user ?? null);
       setSessionCheckFailed(false);
       setAuthChecked(true);
     });
@@ -125,7 +152,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       .getUser()
       .then(({ data, error: authError }) => {
         if (authError) throw authError;
-        setUserId(data.user?.id ?? null);
+        acceptUser(data.user);
         setSessionCheckFailed(false);
         setAuthChecked(true);
       })
@@ -138,7 +165,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       });
 
     return () => subscription.unsubscribe();
-  }, [getClient, retryCount]);
+  }, [acceptUser, getClient, retryCount]);
 
   useEffect(() => {
     if (!authChecked || configurationError || sessionCheckFailed) return;
@@ -202,6 +229,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [
     authChecked,
     configurationError,
+    dataRefreshCount,
     getClient,
     retryCount,
     selectedMonth,
@@ -343,6 +371,40 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [getClient]
   );
 
+  const saveProfile = useCallback(
+    async (profile: {
+      full_name: string;
+      retirement_goal: number;
+      retirement_saved: number;
+    }) => {
+      if (!userId) throw new Error("Entre novamente para salvar seu perfil.");
+      try {
+        const savedProfile = await upsertProfile(getClient(), userId, profile);
+        setState((current) => ({
+          ...current,
+          userName: savedProfile.full_name,
+          metaAposentadoria: savedProfile.retirement_goal,
+          poupancaAposentadoria: savedProfile.retirement_saved,
+        }));
+        setError(null);
+      } catch {
+        throw new Error("Não foi possível salvar seu perfil. Tente novamente.");
+      }
+    },
+    [getClient, userId]
+  );
+
+  const clearUserData = useCallback(() => {
+    activeUserId.current = null;
+    setUserId(null);
+    setUserEmail("");
+    setState(emptyState());
+    setError(null);
+    setHydrated(false);
+    setLoading(false);
+    setSelectedMonth(getCurrentMonth());
+  }, []);
+
   const totals = useMemo(
     () => computeTotals(state.sales, state.expenses),
     [state.sales, state.expenses]
@@ -350,11 +412,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value: StoreContextValue = {
     state,
+    userId,
+    userEmail,
     hydrated,
     loading,
     error,
     ready: hydrated && !loading && error === null,
     retry: () => setRetryCount((count) => count + 1),
+    refreshData: () => setDataRefreshCount((count) => count + 1),
     selectedMonth,
     changeMonth,
     selectMonthForDate,
@@ -364,6 +429,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addExpense,
     updateExpense,
     deleteExpense,
+    saveProfile,
+    clearUserData,
     totals,
   };
 

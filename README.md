@@ -8,6 +8,7 @@ vendas, gastos e perfil são armazenados no Supabase, vinculados à usuária aut
 
 - **/** — Boas-vindas, cadastro ou acesso à conta
 - **/home** — Resumo do mês e lançamentos recentes
+- **/perfil** — Dados pessoais, meta de aposentadoria, saída e exclusão da conta
 - **/vendas** e **/gastos** — Histórico mensal, filtros, edição e exclusão
 - **/resultados** — Totais e resultado do mês
 - **/login**, **/cadastro**, **/recuperar-senha** e **/redefinir-senha** — Autenticação
@@ -45,10 +46,12 @@ vendas, gastos e perfil são armazenados no Supabase, vinculados à usuária aut
 
    Acesse http://localhost:3000.
 
-> **Segredo:** a chave `service_role` nunca deve ir para o front-end nem para o
-> repositório. O app usa somente `NEXT_PUBLIC_SUPABASE_URL` e
-> `NEXT_PUBLIC_SUPABASE_ANON_KEY`; a autorização dos dados é aplicada pelas policies
-> de RLS no banco.
+> **Segredo:** `SUPABASE_SERVICE_ROLE_KEY` é somente para servidor. Nunca use o
+> prefixo `NEXT_PUBLIC_` nessa variável, nunca a importe em componentes client e
+> nunca a envie ao front-end ou ao repositório. Configure-a localmente apenas no
+> `.env.local` e, em produção, no gerenciador de variáveis/segredos da plataforma de
+> hospedagem. A chave é usada exclusivamente pela rota server-side de exclusão de
+> conta; vendas, gastos e perfil continuam protegidos por RLS.
 
 ## Banco de dados e migration
 

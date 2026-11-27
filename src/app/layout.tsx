@@ -8,6 +8,7 @@ import "@fontsource/fraunces/500-italic.css";
 import "@fontsource/fraunces/600.css";
 import "./globals.css";
 import { StoreProvider } from "@/lib/store";
+import LocalImportPrompt from "@/components/LocalImportPrompt";
 
 export const metadata: Metadata = {
   title: "Minha Maré — Precificação para marisqueiras",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <StoreProvider>
           <div className="min-h-dvh w-full bg-mare-bg flex justify-center">
             <div className="w-full max-w-md min-h-dvh bg-white relative flex flex-col shadow-[0_0_60px_-15px_rgba(59,26,92,0.25)]">
+              <LocalImportPrompt />
               {children}
             </div>
           </div>

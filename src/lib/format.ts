@@ -39,12 +39,14 @@ export function currentMonthLabel(year?: number, month?: number): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-export function parseMoneyInput(input: string): number | null {
+export function parseMoneyInput(input: string, allowZero = false): number | null {
   const normalized = input.trim();
   if (!/^\d+(?:[.,]\d{1,2})?$/.test(normalized)) return null;
 
   const value = Number(normalized.replace(",", "."));
-  if (!Number.isFinite(value) || value <= 0) return null;
+  if (!Number.isFinite(value) || value < 0 || (!allowZero && value === 0)) {
+    return null;
+  }
 
   return Math.round(value * 100) / 100;
 }

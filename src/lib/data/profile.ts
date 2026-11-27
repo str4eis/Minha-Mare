@@ -22,3 +22,22 @@ export async function getProfile(client: Client, userId: string) {
   }
   return mapProfileRow(data);
 }
+
+export async function upsertProfile(
+  client: Client,
+  userId: string,
+  profile: {
+    full_name: string;
+    retirement_goal: number;
+    retirement_saved: number;
+  }
+) {
+  const { data, error } = await client
+    .from("profiles")
+    .upsert({ id: userId, ...profile }, { onConflict: "id" })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return mapProfileRow(data);
+}
