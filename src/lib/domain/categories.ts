@@ -12,6 +12,7 @@ export const saleCategoryMeta: Record<SaleCategory, { label: string }> = {
   marisco: { label: "Marisco" },
   sururu: { label: "Sururu" },
   camarao: { label: "Camarão" },
+  siri: { label: "Siri" },
   outros: { label: "Outro" },
 };
 

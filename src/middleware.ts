@@ -32,6 +32,15 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
+  if (pathname === "/resultados" || pathname.startsWith("/resultados/")) {
+    const destination = request.nextUrl.clone();
+    destination.pathname = "/home";
+    destination.search = "";
+    const redirect = NextResponse.redirect(destination);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  }
+
   if (isProtectedPath(pathname) && !user) {
     const destination = request.nextUrl.clone();
     destination.pathname = "/login";

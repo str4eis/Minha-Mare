@@ -3,7 +3,13 @@ import type { Sale } from "./types";
 
 export function formatSaleUnit(unit: Sale["unit"], quantity = 1): string {
   const unitLabel =
-    unit === "dz" ? "dúzia" : unit === "kg" ? "quilo" : "litro";
+    unit === "dz"
+      ? "dúzia"
+      : unit === "kg"
+        ? "quilo"
+        : unit === "litro"
+          ? "litro"
+          : "bacia";
   if (quantity === 1) return unitLabel;
   return unit === "dz" ? "dúzias" : `${unitLabel}s`;
 }

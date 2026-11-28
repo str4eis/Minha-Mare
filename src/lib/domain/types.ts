@@ -5,6 +5,7 @@ export type SaleCategory =
   | "marisco"
   | "sururu"
   | "camarao"
+  | "siri"
   | "outros";
 
 export interface Sale {
@@ -13,9 +14,25 @@ export interface Sale {
   customProduct: string | null;
   buyer: string;
   quantity: number;
-  unit: "dz" | "kg" | "litro";
+  unit: "dz" | "kg" | "litro" | "bacia";
   value: number;
   date: string; // ISO string
+}
+
+export interface ProductPrice {
+  id: string;
+  name: string;
+  unit: "kg" | "litro" | "bacia";
+  pricePerUnit: number;
+  isCustom: boolean;
+}
+
+export interface AppState {
+  userName: string;
+  onboarded: boolean;
+  sales: Sale[];
+  expenses: Expense[];
+  productPrices: ProductPrice[];
 }
 
 export type ExpenseKind = "pesca" | "casa";

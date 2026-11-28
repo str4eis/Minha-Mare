@@ -16,6 +16,7 @@ describe("getDefaultSaleUnit", () => {
     ["marisco", "kg", "quilo"],
     ["peixe", "kg", "quilo"],
     ["camarao", "kg", "quilo"],
+    ["siri", "kg", "quilo"],
     ["outros", "kg", "quilo"],
   ] as const)("uses %s as %s (%s)", (category, unit, label) => {
     expect(getDefaultSaleUnit(category)).toBe(unit);
@@ -27,6 +28,8 @@ describe("getDefaultSaleUnit", () => {
     expect(formatSaleUnit("litro", 2)).toBe("litros");
     expect(formatSaleUnit("dz", 2)).toBe("dúzias");
     expect(formatSaleUnit("kg", 2)).toBe("quilos");
+    expect(formatSaleUnit("bacia")).toBe("bacia");
+    expect(formatSaleUnit("bacia", 2)).toBe("bacias");
   });
 });
 

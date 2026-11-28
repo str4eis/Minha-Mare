@@ -8,6 +8,7 @@ const defaultUnits: Record<SaleCategory, Sale["unit"]> = {
   marisco: "kg",
   peixe: "kg",
   camarao: "kg",
+  siri: "kg",
   outros: "kg",
 };
 

@@ -10,7 +10,7 @@ import React, {
   useState,
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { AppState, Expense, Sale } from "./domain/types";
+import { AppState, Expense, ProductPrice, Sale } from "./domain/types";
 import { computeTotals, getCurrentMonth, SelectedMonth } from "./domain/period";
 import { createClient } from "./supabase/client";
 import {
@@ -32,6 +32,7 @@ import {
   restoreSale,
   SaleUpdate,
 } from "./domain/state";
+import { defaultProductPrices } from "./domain/product-prices";
 import type { Database } from "./supabase/database.types";
 import { getProfileDisplayName } from "./domain/profile-name";
 
@@ -56,6 +57,9 @@ interface StoreContextValue {
   addExpense: (expense: Omit<Expense, "id">) => Promise<void>;
   updateExpense: (id: string, expense: ExpenseUpdate) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  upsertProductPrice: (price: ProductPrice) => void;
+  deleteProductPrice: (id: string) => void;
+  productPrices: ProductPrice[];
   saveProfile: (profile: {
     full_name: string;
   }) => Promise<void>;
@@ -95,6 +99,7 @@ function emptyState(): AppState {
     onboarded: false,
     sales: [],
     expenses: [],
+    productPrices: [...defaultProductPrices],
   };
 }
 
@@ -324,12 +329,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     ])
       .then(([profile, sales, expenses]) => {
         if (!active || currentRequest !== requestId.current) return;
-        setState({
+        setState((current) => ({
+          ...current,
           userName: profile.full_name.trim() || authDisplayName,
           onboarded: true,
           sales,
           expenses,
-        });
+        }));
         setHydrated(true);
         setLoading(false);
       })
@@ -509,6 +515,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [commitPendingDeletion, state.expenses, userId]
   );
 
+  const upsertProductPrice = useCallback(
+    (price: ProductPrice) => {
+      setState((current) => {
+        const existing = current.productPrices.find((p) => p.id === price.id);
+        const next = existing
+          ? current.productPrices.map((p) =>
+              p.id === price.id ? price : p
+            )
+          : [...current.productPrices, price];
+        return { ...current, productPrices: next };
+      });
+    },
+    []
+  );
+
+  const deleteProductPrice = useCallback(
+    (id: string) => {
+      const price = state.productPrices.find((p) => p.id === id);
+      if (!price || !price.isCustom) return;
+      setState((current) => ({
+        ...current,
+        productPrices: current.productPrices.filter((p) => p.id !== id),
+      }));
+    },
+    [state.productPrices]
+  );
+
   const saveProfile = useCallback(
     async (profile: {
       full_name: string;
@@ -565,6 +598,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addExpense,
     updateExpense,
     deleteExpense,
+    upsertProductPrice,
+    deleteProductPrice,
+    productPrices: state.productPrices,
     saveProfile,
     clearUserData,
     totals,

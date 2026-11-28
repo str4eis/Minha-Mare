@@ -55,6 +55,7 @@ const saleCategories = new Set([
   "marisco",
   "sururu",
   "camarao",
+  "siri",
   "outros",
 ]);
 const fishingCategories = new Set([

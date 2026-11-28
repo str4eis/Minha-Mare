@@ -7,6 +7,7 @@ import {
   Sale,
   SaleCategory,
 } from "../domain/types";
+import { defaultProductPrices } from "../domain/product-prices";
 
 export const STORAGE_KEY = "minha-mare:v1";
 export const STORAGE_BACKUP_KEY = "minha-mare:v1:backup";
@@ -17,6 +18,7 @@ export function createEmptyAppState(): AppState {
     onboarded: false,
     sales: [],
     expenses: [],
+    productPrices: [...defaultProductPrices],
   };
 }
 
@@ -186,6 +188,7 @@ export function migrateStoredState(
       onboarded: parsed.onboarded,
       sales,
       expenses,
+      productPrices: [...defaultProductPrices],
     },
     ok: true,
     discarded,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, Mic, Minus, Plus } from "lucide-react";
+import { CircleCheck, Mic, Minus, Plus, Tag } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import DataStatus from "@/components/ui/DataStatus";
@@ -13,7 +13,7 @@ import { useStore } from "@/lib/store";
 import { saleCategoryMeta } from "@/lib/domain/categories";
 import { cn } from "@/lib/utils/cn";
 import { dateInputToISO, isoToDateInput } from "@/lib/domain/period";
-import { formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
+import { formatBRL, formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
 import { moneyInWords } from "@/lib/domain/money-words";
 import {
   isSpeechRecognitionSupported,
@@ -29,7 +29,16 @@ import {
 } from "@/lib/domain/sale-entry";
 import { getLatestSale, getLatestSaleForCategory } from "@/lib/data/sales";
 import { createClient } from "@/lib/supabase/client";
-import { Sale, SaleCategory } from "@/lib/domain/types";
+import {
+  ProductPrice,
+  Sale,
+  SaleCategory,
+} from "@/lib/domain/types";
+import {
+  findProductPrice,
+  productPriceToSaleFields,
+  totalForQuantity,
+} from "@/lib/domain/product-prices";
 
 const categories: SaleCategory[] = [
   "ostra",
@@ -47,7 +56,8 @@ interface SaleFormProps {
 
 export default function SaleForm({ sale }: SaleFormProps) {
   const router = useRouter();
-  const { addSale, updateSale, ready } = useStore();
+  const { addSale, updateSale, ready, productPrices, upsertProductPrice } =
+    useStore();
   const [category, setCategory] = useState<SaleCategory | null>(
     sale?.category ?? null
   );
@@ -73,6 +83,9 @@ export default function SaleForm({ sale }: SaleFormProps) {
   } | null>(null);
   const [lastSaleError, setLastSaleError] = useState("");
   const [priceError, setPriceError] = useState("");
+  const [activeProductPrice, setActiveProductPrice] = useState<
+    ProductPrice | null
+  >(null);
   const [today, setToday] = useState("");
   const [date, setDate] = useState(sale ? isoToDateInput(sale.date) : "");
   const [dateError, setDateError] = useState("");
@@ -159,6 +172,12 @@ export default function SaleForm({ sale }: SaleFormProps) {
 
   useEffect(() => {
     if (
+      activeProductPrice?.pricePerUnit &&
+      activeProductPrice.pricePerUnit > 0
+    ) {
+      return;
+    }
+    if (
       !priceSuggestion ||
       priceSuggestion.category !== category ||
       priceSuggestion.unit !== unit ||
@@ -173,7 +192,7 @@ export default function SaleForm({ sale }: SaleFormProps) {
         (priceSuggestion.pricePerUnit * quantityValue).toFixed(2)
       )
     );
-  }, [category, priceSuggestion, quantityValue, unit]);
+  }, [category, priceSuggestion, quantityValue, unit, activeProductPrice]);
 
   const handleSave = async () => {
     if (!canSave || numericValue === null || quantityValue === null || !category) {
@@ -229,9 +248,40 @@ export default function SaleForm({ sale }: SaleFormProps) {
     setPriceSuggestion(null);
     setPriceError("");
     setSpeechError("");
-    if (!sale) {
-      setValue("");
-      valueWasEdited.current = false;
+    const productPrice = findProductPrice(productPrices, nextCategory, null);
+    if (productPrice?.pricePerUnit && productPrice.pricePerUnit > 0) {
+      setUnit(productPrice.unit);
+      setActiveProductPrice(productPrice);
+      if (!sale && !valueWasEdited.current) {
+        setValue(
+          formatMoneyInput(
+            (productPrice.pricePerUnit * 1).toFixed(2)
+          )
+        );
+      }
+    } else {
+      setActiveProductPrice(null);
+      if (!sale) {
+        setValue("");
+        valueWasEdited.current = false;
+      }
+    }
+  };
+
+  const chooseProduct = (price: ProductPrice) => {
+    const { category: cat, customProduct: cp } =
+      productPriceToSaleFields(price);
+    setCustomProduct(cp ?? "");
+    setCategory(cat);
+    setUnit(price.unit);
+    setActiveProductPrice(price);
+    setPriceSuggestion(null);
+    setPriceError("");
+    setSpeechError("");
+    if (!sale && !valueWasEdited.current && price.pricePerUnit > 0) {
+      setValue(
+        formatMoneyInput((price.pricePerUnit * 1).toFixed(2))
+      );
     }
   };
 
@@ -275,7 +325,19 @@ export default function SaleForm({ sale }: SaleFormProps) {
   };
 
   const updateQuantity = (next: number) => {
-    setQuantity(formatQuantityInput(Math.max(0.001, next)));
+    const nextQty = Math.max(0.001, next);
+    setQuantity(formatQuantityInput(nextQty));
+    if (
+      activeProductPrice?.pricePerUnit &&
+      activeProductPrice.pricePerUnit > 0 &&
+      !valueWasEdited.current
+    ) {
+      setValue(
+        formatMoneyInput(
+          (activeProductPrice.pricePerUnit * nextQty).toFixed(2)
+        )
+      );
+    }
   };
 
   return (
@@ -334,6 +396,48 @@ export default function SaleForm({ sale }: SaleFormProps) {
             );
           })}
         </div>
+
+        <section className="mt-4 rounded-xl2 bg-mare-card p-4">
+          <h2 className="text-lg font-semibold text-mare-ink">
+            Meus Preços
+          </h2>
+          <p className="mt-1 text-base text-mare-slate">
+            Produtos com preço unitário salvo. Toque para usar na venda.
+          </p>
+          <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
+            {productPrices.map((price) => {
+              const { category: cat, customProduct: cp } =
+                productPriceToSaleFields(price);
+              const active =
+                activeProductPrice?.id === price.id ||
+                (category === cat &&
+                  customProduct === (cp ?? ""));
+              return (
+                <button
+                  key={price.id}
+                  type="button"
+                  onClick={() => chooseProduct(price)}
+                  aria-pressed={active}
+                  className={cn(
+                    "flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl2 border px-3 py-2 transition-colors",
+                    active
+                      ? "bg-mare-purple border-mare-purple text-white shadow-soft"
+                      : "bg-mare-card border-transparent text-mare-ink hover:border-mare-purple/30"
+                  )}
+                >
+                  <Tag className="h-6 w-6" aria-hidden="true" />
+                  <span className="text-sm font-semibold">{price.name}</span>
+                  {price.pricePerUnit > 0 && (
+                    <span className="text-xs text-mare-slate">
+                      {formatBRL(price.pricePerUnit)}/{" "}
+                      {formatSaleUnit(price.unit, 1)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {category === "outros" && (
           <div className="mt-4 rounded-xl2 bg-mare-card p-4">
@@ -417,23 +521,41 @@ export default function SaleForm({ sale }: SaleFormProps) {
             </p>
           )}
           <div className={cn("mt-3 flex gap-2", !category && "opacity-50")}>
-            {(["dz", "kg", "litro"] as const).map((currentUnit) => (
-              <button
-                key={currentUnit}
-                type="button"
-                disabled={!category}
-                onClick={() => setUnit(currentUnit)}
-                aria-pressed={unit === currentUnit}
-                className={cn(
-                  "min-h-14 flex-1 rounded-full px-3 py-2 text-lg font-semibold transition-colors disabled:cursor-not-allowed",
-                  unit === currentUnit
-                    ? "bg-mare-purple text-white"
-                    : "bg-white text-mare-slate border border-black/5"
-                )}
-              >
-                {formatSaleUnit(currentUnit)}
-              </button>
-            ))}
+            {(["dz", "kg", "litro", "bacia"] as const).map(
+              (currentUnit) => (
+                <button
+                  key={currentUnit}
+                  type="button"
+                  disabled={!category}
+                  onClick={() => {
+                    setUnit(currentUnit);
+                    if (
+                      activeProductPrice?.pricePerUnit &&
+                      activeProductPrice.pricePerUnit > 0 &&
+                      !valueWasEdited.current &&
+                      quantityValue !== null
+                    ) {
+                      setValue(
+                        formatMoneyInput(
+                          (
+                            activeProductPrice.pricePerUnit * quantityValue
+                          ).toFixed(2)
+                        )
+                      );
+                    }
+                  }}
+                  aria-pressed={unit === currentUnit}
+                  className={cn(
+                    "min-h-14 flex-1 rounded-full px-3 py-2 text-lg font-semibold transition-colors disabled:cursor-not-allowed",
+                    unit === currentUnit
+                      ? "bg-mare-purple text-white"
+                      : "bg-white text-mare-slate border border-black/5"
+                  )}
+                >
+                  {formatSaleUnit(currentUnit)}
+                </button>
+              )
+            )}
           </div>
         </div>
 

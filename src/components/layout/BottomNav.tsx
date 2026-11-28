@@ -7,6 +7,7 @@ import {
   CircleDollarSign,
   Home,
   PlusCircle,
+  Tag,
   Undo2,
   Wallet,
 } from "lucide-react";
@@ -109,16 +110,16 @@ export default function BottomNav() {
           </li>
           <li className="flex-1">
             <Link
-              href="/resultados"
+              href="/precos"
               aria-current={
-                pathname.startsWith("/resultados") ? "page" : undefined
+                pathname.startsWith("/precos") ? "page" : undefined
               }
               className="flex min-h-14 flex-col items-center justify-center gap-1 py-1 text-mare-slate"
             >
-              <CircleDollarSign
+              <Tag
                 className={cn(
                   "h-6 w-6",
-                  pathname.startsWith("/resultados") && "text-mare-purple"
+                  pathname.startsWith("/precos") && "text-mare-purple"
                 )}
                 strokeWidth={2}
                 aria-hidden="true"
@@ -126,10 +127,10 @@ export default function BottomNav() {
               <span
                 className={cn(
                   "text-lg font-semibold",
-                  pathname.startsWith("/resultados") && "text-mare-purple"
+                  pathname.startsWith("/precos") && "text-mare-purple"
                 )}
               >
-                Sobrou
+                Meus Preços
               </span>
             </Link>
           </li>
