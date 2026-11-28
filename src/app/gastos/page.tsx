@@ -2,10 +2,12 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import DataStatus from "@/components/ui/DataStatus";
+import DetailsModal from "@/components/ui/DetailsModal";
 import Header from "@/components/layout/Header";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
@@ -29,6 +31,7 @@ function GastosContent() {
     params.get("categoria") ?? ""
   );
   const { state, totals, selectedMonth, hydrated, ready, deleteExpense } = useStore();
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
 
   useEffect(() => {
     setTab(params.get("tab") === "casa" ? "casa" : "pesca");
@@ -241,25 +244,36 @@ function GastosContent() {
                       {formatDateShort(expense.date)}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="whitespace-nowrap text-lg font-semibold text-mare-negative">
                       - {formatBRL(expense.value)}
                     </span>
-                    <div className="flex flex-col items-end gap-1 font-medium">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setViewingExpense(expense)}
+                        aria-label={`Ver gasto: ${expense.description}`}
+                        title="Ver"
+                        className="flex h-12 w-12 items-center justify-center rounded-full text-mare-institutional hover:bg-mare-purpleLight"
+                      >
+                        <Eye className="h-5 w-5" aria-hidden="true" />
+                      </button>
                       <Link
                         href={`/gastos/${encodeURIComponent(expense.id)}/editar`}
                         aria-label={`Editar gasto: ${expense.description}`}
-                        className="flex min-h-14 items-center px-2 text-lg text-mare-purple hover:underline"
+                        title="Editar"
+                        className="flex h-12 w-12 items-center justify-center rounded-full text-mare-purple hover:bg-mare-purpleLight"
                       >
-                        Editar
+                        <Pencil className="h-5 w-5" aria-hidden="true" />
                       </Link>
                       <button
                         type="button"
                         onClick={() => void deleteExpense(expense.id)}
                         aria-label={`Excluir gasto: ${expense.description}`}
-                        className="min-h-14 px-2 text-lg font-semibold text-mare-negative hover:underline"
+                        title="Excluir"
+                        className="flex h-12 w-12 items-center justify-center rounded-full text-mare-negative hover:bg-mare-negativeLight"
                       >
-                        Apagar
+                        <Trash2 className="h-5 w-5" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
@@ -268,6 +282,33 @@ function GastosContent() {
             })}
         </ul>
       </main>
+
+      {viewingExpense && (
+        <DetailsModal
+          title="Detalhes do gasto"
+          fields={[
+            { label: "Descrição", value: viewingExpense.description },
+            {
+              label: "Tipo",
+              value:
+                viewingExpense.kind === "pesca"
+                  ? "Gasto do trabalho"
+                  : "Gasto de casa",
+            },
+            {
+              label: "Categoria",
+              value: getExpenseCategoryLabel(
+                viewingExpense.kind,
+                viewingExpense.category,
+                viewingExpense.customDescription
+              ),
+            },
+            { label: "Data", value: formatDateShort(viewingExpense.date) },
+            { label: "Valor", value: formatBRL(viewingExpense.value) },
+          ]}
+          onClose={() => setViewingExpense(null)}
+        />
+      )}
 
       <BottomNav />
     </div>

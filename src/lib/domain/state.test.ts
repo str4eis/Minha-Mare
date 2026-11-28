@@ -37,8 +37,6 @@ const initialState: AppState = {
   onboarded: true,
   sales: [sale],
   expenses: [expense],
-  metaAposentadoria: 100,
-  poupancaAposentadoria: 25,
 };
 
 describe("sale state operations", () => {

@@ -138,7 +138,7 @@ export default function ResultadosPage() {
         </div>
 
         <Link
-          href="/mais"
+          href="/mais#relatorios"
           className="mt-5 flex min-h-14 items-center justify-center rounded-full bg-mare-primary px-4 text-lg font-semibold text-white"
         >
           Ver lançamentos e relatórios

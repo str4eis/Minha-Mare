@@ -7,7 +7,7 @@ type Client = SupabaseClient<Database>;
 export async function getProfile(client: Client, userId: string) {
   const { data, error } = await client
     .from("profiles")
-    .select("*")
+    .select("id, full_name")
     .eq("id", userId)
     .maybeSingle();
 
@@ -16,8 +16,6 @@ export async function getProfile(client: Client, userId: string) {
     return {
       id: userId,
       full_name: "",
-      retirement_goal: 0,
-      retirement_saved: 0,
     };
   }
   return mapProfileRow(data);
@@ -26,16 +24,12 @@ export async function getProfile(client: Client, userId: string) {
 export async function upsertProfile(
   client: Client,
   userId: string,
-  profile: {
-    full_name: string;
-    retirement_goal: number;
-    retirement_saved: number;
-  }
+  profile: { full_name: string }
 ) {
   const { data, error } = await client
     .from("profiles")
     .upsert({ id: userId, ...profile }, { onConflict: "id" })
-    .select("*")
+    .select("id, full_name")
     .single();
 
   if (error) throw error;

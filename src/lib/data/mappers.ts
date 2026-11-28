@@ -146,18 +146,13 @@ export function mapExpenseRow(value: unknown): Expense {
   };
 }
 
-export function mapProfileRow(value: unknown): Pick<
-  ProfileRow,
-  "id" | "full_name" | "retirement_goal" | "retirement_saved"
-> {
+export function mapProfileRow(
+  value: unknown
+): Pick<ProfileRow, "id" | "full_name"> {
   if (!isRecord(value)) throw new TypeError("Perfil recebido em formato inválido.");
-  const retirementGoal = finiteNonNegativeNumber(value.retirement_goal);
-  const retirementSaved = finiteNonNegativeNumber(value.retirement_saved);
   if (
     typeof value.id !== "string" ||
-    typeof value.full_name !== "string" ||
-    retirementGoal === null ||
-    retirementSaved === null
+    typeof value.full_name !== "string"
   ) {
     throw new TypeError("Perfil recebido com campos inválidos.");
   }
@@ -165,8 +160,6 @@ export function mapProfileRow(value: unknown): Pick<
   return {
     id: value.id,
     full_name: value.full_name,
-    retirement_goal: retirementGoal,
-    retirement_saved: retirementSaved,
   };
 }
 

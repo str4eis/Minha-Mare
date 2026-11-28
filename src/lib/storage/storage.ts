@@ -17,8 +17,6 @@ export function createEmptyAppState(): AppState {
     onboarded: false,
     sales: [],
     expenses: [],
-    metaAposentadoria: 0,
-    poupancaAposentadoria: 0,
   };
 }
 
@@ -146,10 +144,6 @@ function migrateExpense(value: unknown): Expense | null {
   };
 }
 
-function isNonNegativeFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
-}
-
 export function migrateStoredState(
   raw: string | null
 ): { state: AppState; ok: boolean; discarded: number } {
@@ -169,9 +163,7 @@ export function migrateStoredState(
     !Array.isArray(parsed.sales) ||
     !Array.isArray(parsed.expenses) ||
     typeof parsed.userName !== "string" ||
-    typeof parsed.onboarded !== "boolean" ||
-    !isNonNegativeFiniteNumber(parsed.metaAposentadoria) ||
-    !isNonNegativeFiniteNumber(parsed.poupancaAposentadoria)
+    typeof parsed.onboarded !== "boolean"
   ) {
     return { state: createEmptyAppState(), ok: false, discarded: 0 };
   }
@@ -194,10 +186,6 @@ export function migrateStoredState(
       onboarded: parsed.onboarded,
       sales,
       expenses,
-      metaAposentadoria:
-        parsed.metaAposentadoria === 500 ? 0 : parsed.metaAposentadoria,
-      poupancaAposentadoria:
-        parsed.poupancaAposentadoria === 225 ? 0 : parsed.poupancaAposentadoria,
     },
     ok: true,
     discarded,

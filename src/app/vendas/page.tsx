@@ -2,19 +2,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import CategoryIcon from "@/components/forms/CategoryIcon";
 import DataStatus from "@/components/ui/DataStatus";
+import DetailsModal from "@/components/ui/DetailsModal";
 import Header from "@/components/layout/Header";
 import { useStore } from "@/lib/store";
 import { currentMonthLabel, formatBRL, formatDateShort } from "@/lib/domain/format";
 import { getSaleProductLabel } from "@/lib/domain/categories";
 import { filterItems } from "@/lib/domain/filters";
 import { formatSaleUnit } from "@/lib/domain/sale-entry";
+import type { Sale } from "@/lib/domain/types";
 
 export default function VendasPage() {
   const { state, totals, selectedMonth, hydrated, ready, deleteSale } = useStore();
   const [query, setQuery] = useState("");
+  const [viewingSale, setViewingSale] = useState<Sale | null>(null);
   const monthLabel = hydrated
     ? currentMonthLabel(selectedMonth.year, selectedMonth.month)
     : "—";
@@ -113,25 +117,36 @@ export default function VendasPage() {
                       {formatDateShort(sale.date)}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="whitespace-nowrap text-lg font-semibold text-mare-tealDark">
                       + {formatBRL(sale.value)}
                     </span>
-                    <div className="flex flex-col items-end gap-1 font-medium">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setViewingSale(sale)}
+                      aria-label={`Ver venda de ${sale.buyer}`}
+                      title="Ver"
+                      className="flex h-12 w-12 items-center justify-center rounded-full text-mare-institutional hover:bg-mare-purpleLight"
+                    >
+                      <Eye className="h-5 w-5" aria-hidden="true" />
+                    </button>
                       <Link
                         href={`/vendas/${encodeURIComponent(sale.id)}/editar`}
                         aria-label={`Editar venda de ${sale.buyer}`}
-                        className="flex min-h-14 items-center px-2 text-lg text-mare-purple hover:underline"
+                      title="Editar"
+                      className="flex h-12 w-12 items-center justify-center rounded-full text-mare-purple hover:bg-mare-purpleLight"
                       >
-                        Editar
+                      <Pencil className="h-5 w-5" aria-hidden="true" />
                       </Link>
                       <button
                         type="button"
                         onClick={() => void deleteSale(sale.id)}
                         aria-label={`Excluir venda de ${sale.buyer}`}
-                        className="min-h-14 px-2 text-lg font-semibold text-mare-negative hover:underline"
+                      title="Excluir"
+                      className="flex h-12 w-12 items-center justify-center rounded-full text-mare-negative hover:bg-mare-negativeLight"
                       >
-                        Apagar
+                      <Trash2 className="h-5 w-5" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
@@ -140,6 +155,32 @@ export default function VendasPage() {
             })}
         </ul>
       </main>
+
+      {viewingSale && (
+        <DetailsModal
+          title="Detalhes da venda"
+          fields={[
+            { label: "Compradora", value: viewingSale.buyer },
+            {
+              label: "Produto",
+              value: getSaleProductLabel(
+                viewingSale.category,
+                viewingSale.customProduct
+              ),
+            },
+            {
+              label: "Quantidade",
+              value: `${viewingSale.quantity} ${formatSaleUnit(
+                viewingSale.unit,
+                viewingSale.quantity
+              )}`,
+            },
+            { label: "Data", value: formatDateShort(viewingSale.date) },
+            { label: "Valor", value: formatBRL(viewingSale.value) },
+          ]}
+          onClose={() => setViewingSale(null)}
+        />
+      )}
 
       <BottomNav />
     </div>

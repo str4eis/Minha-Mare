@@ -1,20 +1,24 @@
-export const WELCOME_SEEN_KEY = "minha-mare:welcome-seen:v1";
+export const WELCOME_SEEN_KEY = "minha-mare:welcome-seen";
 
-export function hasSeenWelcome(): boolean {
+export function getWelcomeSeenKey(userId: string): string {
+  return `${WELCOME_SEEN_KEY}:${userId}`;
+}
+
+export function hasSeenWelcome(userId: string): boolean {
   try {
     return (
       typeof window !== "undefined" &&
-      window.localStorage.getItem(WELCOME_SEEN_KEY) === "true"
+      window.localStorage.getItem(getWelcomeSeenKey(userId)) === "true"
     );
   } catch {
     return false;
   }
 }
 
-export function markWelcomeAsSeen(): void {
+export function markWelcomeAsSeen(userId: string): void {
   try {
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(WELCOME_SEEN_KEY, "true");
+      window.localStorage.setItem(getWelcomeSeenKey(userId), "true");
     }
   } catch {
     // Storage may be unavailable in private or restricted browsing.

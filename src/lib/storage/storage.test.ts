@@ -58,7 +58,7 @@ function storedState(
 }
 
 describe("migrateStoredState", () => {
-  it("removes only the sample transactions and default profile values", () => {
+  it("migrates existing data and discards demonstration transactions", () => {
     const result = migrateStoredState(
       storedState({
         sales: [sampleSale],
@@ -70,11 +70,11 @@ describe("migrateStoredState", () => {
     expect(result.discarded).toBe(0);
     expect(result.state).toMatchObject({
       userName: "",
-      metaAposentadoria: 0,
-      poupancaAposentadoria: 0,
       sales: [],
       expenses: [],
     });
+    expect(result.state).not.toHaveProperty("metaAposentadoria");
+    expect(result.state).not.toHaveProperty("poupancaAposentadoria");
   });
 
   it("keeps real transactions mixed with sample data", () => {
@@ -118,8 +118,6 @@ describe("migrateStoredState", () => {
         userName: "Joana",
         sales: [realSale],
         expenses: [realExpense],
-        metaAposentadoria: 700,
-        poupancaAposentadoria: 130,
       })
     );
 
@@ -129,8 +127,6 @@ describe("migrateStoredState", () => {
       userName: "Joana",
       sales: [realSale],
       expenses: [realExpense],
-      metaAposentadoria: 700,
-      poupancaAposentadoria: 130,
     });
   });
 
@@ -145,8 +141,6 @@ describe("migrateStoredState", () => {
     const result = migrateStoredState(
       storedState({
         sales: [shrimpSale],
-        metaAposentadoria: 700,
-        poupancaAposentadoria: 130,
       })
     );
 

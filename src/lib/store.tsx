@@ -38,7 +38,6 @@ import { getProfileDisplayName } from "./domain/profile-name";
 interface StoreContextValue {
   state: AppState;
   userId: string | null;
-  userEmail: string;
   hydrated: boolean;
   loading: boolean;
   error: string | null;
@@ -59,8 +58,6 @@ interface StoreContextValue {
   deleteExpense: (id: string) => Promise<void>;
   saveProfile: (profile: {
     full_name: string;
-    retirement_goal: number;
-    retirement_saved: number;
   }) => Promise<void>;
   clearUserData: () => void;
   totals: {
@@ -98,8 +95,6 @@ function emptyState(): AppState {
     onboarded: false,
     sales: [],
     expenses: [],
-    metaAposentadoria: 0,
-    poupancaAposentadoria: 0,
   };
 }
 
@@ -122,7 +117,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState("");
   const [authDisplayName, setAuthDisplayName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -241,7 +235,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setHydrated(false);
     }
     setUserId(nextUserId);
-    setUserEmail(user?.email ?? "");
     setAuthDisplayName(
       getProfileDisplayName("", user?.user_metadata, user?.email)
     );
@@ -336,8 +329,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           onboarded: true,
           sales,
           expenses,
-          metaAposentadoria: profile.retirement_goal,
-          poupancaAposentadoria: profile.retirement_saved,
         });
         setHydrated(true);
         setLoading(false);
@@ -521,8 +512,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const saveProfile = useCallback(
     async (profile: {
       full_name: string;
-      retirement_goal: number;
-      retirement_saved: number;
     }) => {
       if (!userId) throw new Error("Entre novamente para salvar seu perfil.");
       try {
@@ -530,8 +519,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setState((current) => ({
           ...current,
           userName: savedProfile.full_name,
-          metaAposentadoria: savedProfile.retirement_goal,
-          poupancaAposentadoria: savedProfile.retirement_saved,
         }));
         setError(null);
       } catch {
@@ -544,7 +531,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const clearUserData = useCallback(() => {
     activeUserId.current = null;
     setUserId(null);
-    setUserEmail("");
     setAuthDisplayName("");
     setState(emptyState());
     setError(null);
@@ -561,7 +547,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value: StoreContextValue = {
     state,
     userId,
-    userEmail,
     hydrated,
     loading,
     error,

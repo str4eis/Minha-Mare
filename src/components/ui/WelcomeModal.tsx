@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, X } from "lucide-react";
-import SpeakButton from "../audio/SpeakButton";
 import {
   getWelcomeVideoEmbedUrl,
   markWelcomeAsSeen,
@@ -10,22 +9,18 @@ import {
 interface WelcomeModalProps {
   open: boolean;
   onClose: () => void;
+  userId: string | null;
 }
-
-const welcomeExplanation =
-  "No Minha Maré, você anota suas vendas e seus gastos. " +
-  "Assim, acompanha o que entrou, saiu e sobrou. " +
-  "Toque em Anotar para registrar uma venda ou um gasto. " +
-  "Em Mais, você encontra seu histórico e seus relatórios.";
 
 export default function WelcomeModal({
   open,
   onClose,
+  userId,
 }: WelcomeModalProps) {
   if (!open) return null;
 
   const handleClose = () => {
-    markWelcomeAsSeen();
+    if (userId) markWelcomeAsSeen(userId);
     onClose();
   };
   const videoUrl = getVideoUrl();
@@ -69,15 +64,6 @@ export default function WelcomeModal({
             </div>
           )}
 
-          <p className="mt-4 text-lg leading-relaxed text-mare-ink">
-            {welcomeExplanation}
-          </p>
-          <div className="mt-3">
-            <SpeakButton
-              label="Ouvir explicação"
-              text={welcomeExplanation}
-            />
-          </div>
         </div>
 
         <div className="shrink-0 border-t border-black/5 bg-white p-4">

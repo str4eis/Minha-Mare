@@ -70,8 +70,6 @@ Esperado: `backup` continua `"{json inválido"` e `backup2` tem `"{outro erro"`.
 localStorage.setItem("minha-mare:v1", JSON.stringify({
   userName: "Maria da Maré",
   onboarded: true,
-  metaAposentadoria: 500,
-  poupancaAposentadoria: 225,
   sales: [
     { id: "s1", category: "peixe", buyer: "Exemplo", quantity: 1, unit: "kg", value: 120, date: new Date().toISOString() },
     { id: "s9999", category: "ostra", buyer: "Venda real", quantity: 2, unit: "dz", value: 50, date: new Date().toISOString() }

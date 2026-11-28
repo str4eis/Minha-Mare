@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getWelcomeVideoEmbedUrl,
+  getWelcomeSeenKey,
   hasSeenWelcome,
   markWelcomeAsSeen,
   WELCOME_SEEN_KEY,
@@ -20,10 +21,14 @@ describe("welcome storage", () => {
       },
     });
 
-    expect(hasSeenWelcome()).toBe(false);
-    markWelcomeAsSeen();
-    expect(values.get(WELCOME_SEEN_KEY)).toBe("true");
-    expect(hasSeenWelcome()).toBe(true);
+    expect(hasSeenWelcome("user-1")).toBe(false);
+    markWelcomeAsSeen("user-1");
+    expect(values.get(`${WELCOME_SEEN_KEY}:user-1`)).toBe("true");
+    expect(hasSeenWelcome("user-1")).toBe(true);
+    expect(hasSeenWelcome("user-2")).toBe(false);
+    expect(getWelcomeSeenKey("user-2")).toBe(
+      "minha-mare:welcome-seen:user-2"
+    );
   });
 
   it("falls back safely when local storage is blocked", () => {
@@ -33,8 +38,8 @@ describe("welcome storage", () => {
       },
     });
 
-    expect(hasSeenWelcome()).toBe(false);
-    expect(() => markWelcomeAsSeen()).not.toThrow();
+    expect(hasSeenWelcome("user-1")).toBe(false);
+    expect(() => markWelcomeAsSeen("user-1")).not.toThrow();
   });
 
   it("returns no embed URL for a missing or blank video ID", () => {

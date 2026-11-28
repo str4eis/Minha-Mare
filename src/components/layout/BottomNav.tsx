@@ -3,7 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleDollarSign, Home, PlusCircle, Undo2 } from "lucide-react";
+import {
+  CircleDollarSign,
+  Home,
+  PlusCircle,
+  Undo2,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useStore } from "@/lib/store";
 
@@ -37,23 +43,25 @@ export default function BottomNav() {
       {showChoices && (
         <div
           id="anotar-options"
-          className="fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-md grid-cols-2 gap-3 rounded-xl2 bg-white p-3 shadow-soft"
+          className="fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-md grid-cols-1 gap-4 rounded-xl2 bg-white p-4 shadow-soft"
           role="group"
           aria-label="Escolha o que anotar"
         >
           <Link
             href="/vendas/nova"
             onClick={() => setShowChoices(false)}
-            className="flex min-h-14 items-center justify-center rounded-xl2 bg-mare-purple px-3 text-center text-lg font-semibold text-white"
+            className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl2 border-2 border-emerald-500/40 bg-emerald-500/15 px-3 text-center text-lg font-semibold text-emerald-800"
           >
-            Anotar venda
+            <CircleDollarSign className="h-10 w-10" aria-hidden="true" />
+            Venda
           </Link>
           <Link
             href="/gastos/novo"
             onClick={() => setShowChoices(false)}
-            className="flex min-h-14 items-center justify-center rounded-xl2 bg-mare-primary px-3 text-center text-lg font-semibold text-white"
+            className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl2 border-2 border-rose-500/40 bg-rose-500/15 px-3 text-center text-lg font-semibold text-rose-700"
           >
-            Anotar gasto
+            <Wallet className="h-10 w-10" aria-hidden="true" />
+            Gasto
           </Link>
         </div>
       )}

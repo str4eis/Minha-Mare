@@ -9,7 +9,6 @@ import {
   Search,
   Share2,
   Sheet,
-  Target,
   UserRound,
 } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
@@ -28,7 +27,7 @@ import { createWhatsAppSummary } from "@/lib/export/whatsapp";
 
 export default function MaisPage() {
   const router = useRouter();
-  const { state, totals, selectedMonth, hydrated, ready } = useStore();
+  const { state, totals, selectedMonth, hydrated, ready, userId } = useStore();
   const [saleSearch, setSaleSearch] = useState("");
   const [expenseSearch, setExpenseSearch] = useState("");
   const [expenseKind, setExpenseKind] = useState<ExpenseKind>("pesca");
@@ -106,7 +105,7 @@ export default function MaisPage() {
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <Header />
-      <main className="flex-1 overflow-y-auto px-5 pb-4">
+      <main className="flex-1 overflow-y-auto scroll-smooth px-5 pb-4">
         <DataStatus />
         <h1 className="text-2xl font-semibold">Mais opções</h1>
         <p className="mt-1 text-lg text-mare-slate">
@@ -207,7 +206,7 @@ export default function MaisPage() {
           </form>
         </section>
 
-        <section className="mt-6">
+        <section id="relatorios" className="mt-6 scroll-mt-4">
           <h2 className="text-xl font-semibold text-mare-institutional">
             Relatórios de {monthLabel}
           </h2>
@@ -271,18 +270,11 @@ export default function MaisPage() {
             Sua conta
           </h2>
           <Link
-            href="/perfil#retirement-goal-section"
-            className="flex min-h-14 items-center gap-3 rounded-xl2 border border-black/10 px-4 text-lg font-medium text-mare-ink"
-          >
-            <Target className="h-5 w-5 text-mare-purple" aria-hidden="true" />
-            Meta para o futuro
-          </Link>
-          <Link
             href="/perfil"
             className="flex min-h-14 items-center gap-3 rounded-xl2 border border-black/10 px-4 text-lg font-medium text-mare-ink"
           >
             <UserRound className="h-5 w-5 text-mare-purple" aria-hidden="true" />
-            Perfil, sair ou excluir conta
+            Nome ou apelido e sair da conta
           </Link>
         </section>
       </main>
@@ -290,6 +282,7 @@ export default function MaisPage() {
       <WelcomeModal
         open={welcomeOpen}
         onClose={() => setWelcomeOpen(false)}
+        userId={userId}
       />
     </div>
   );

@@ -6,7 +6,6 @@ import {
 } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import SpeakButton from "../audio/SpeakButton";
 import WelcomeModal from "./WelcomeModal";
 
 type ButtonProps = {
@@ -33,21 +32,6 @@ function findButton(node: ReactNode, label: string): ReactElement<ButtonProps> |
   return findButton(node.props.children, label);
 }
 
-function findSpeakButton(node: ReactNode): ReactElement<{ label?: string }> | null {
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      const found = findSpeakButton(child);
-      if (found) return found;
-    }
-    return null;
-  }
-  if (!isValidElement<{ children?: ReactNode }>(node)) return null;
-  if (node.type === SpeakButton) {
-    return node as ReactElement<{ label?: string }>;
-  }
-  return findSpeakButton(node.props.children);
-}
-
 function getText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(getText).join("");
@@ -66,7 +50,11 @@ describe("WelcomeModal", () => {
   it("shows the vertical video when an ID is configured", () => {
     vi.stubEnv("NEXT_PUBLIC_WELCOME_VIDEO_ID", "welcome-video");
     const markup = renderToStaticMarkup(
-      createElement(WelcomeModal, { open: true, onClose: () => undefined })
+      createElement(WelcomeModal, {
+        open: true,
+        onClose: () => undefined,
+        userId: "user-1",
+      })
     );
 
     expect(markup).toContain('role="dialog"');
@@ -79,16 +67,21 @@ describe("WelcomeModal", () => {
       'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
     );
     expect(markup).toContain('allowfullscreen=""');
+    expect(markup).not.toContain("Ouvir explicação");
   });
 
-  it("shows the visual and spoken explanation without a video", () => {
+  it("shows no audio-description control when no video is configured", () => {
     vi.stubEnv("NEXT_PUBLIC_WELCOME_VIDEO_ID", "");
-    const modal = WelcomeModal({ open: true, onClose: () => undefined });
+    const modal = WelcomeModal({
+      open: true,
+      onClose: () => undefined,
+      userId: "user-1",
+    });
     const markup = renderToStaticMarkup(modal);
 
     expect(markup).not.toContain("<iframe");
-    expect(markup).toContain("anota suas vendas e seus gastos");
-    expect(findSpeakButton(modal)?.props.label).toBe("Ouvir explicação");
+    expect(markup).not.toContain("Ouvir explicação");
+    expect(markup).toContain("Entendi, começar");
   });
 
   it("marks the guide as seen and closes from the main button", () => {
@@ -100,13 +93,13 @@ describe("WelcomeModal", () => {
       },
     });
     const onClose = vi.fn();
-    const modal = WelcomeModal({ open: true, onClose });
+    const modal = WelcomeModal({ open: true, onClose, userId: "user-1" });
     const button = findButton(modal, "Entendi, começar");
 
     expect(button).not.toBeNull();
     button?.props.onClick?.();
 
-    expect(values.get("minha-mare:welcome-seen:v1")).toBe("true");
+    expect(values.get("minha-mare:welcome-seen:user-1")).toBe("true");
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

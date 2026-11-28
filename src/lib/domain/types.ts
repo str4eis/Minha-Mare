@@ -52,6 +52,4 @@ export interface AppState {
   onboarded: boolean;
   sales: Sale[];
   expenses: Expense[];
-  metaAposentadoria: number;
-  poupancaAposentadoria: number;
 }

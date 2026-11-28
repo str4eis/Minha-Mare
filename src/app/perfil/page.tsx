@@ -5,64 +5,40 @@ import { useRouter } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import DataStatus from "@/components/ui/DataStatus";
 import Header from "@/components/layout/Header";
-import MoneyInput from "@/components/ui/MoneyInput";
 import { useStore } from "@/lib/store";
-import { formatMoneyInput, parseMoneyInput } from "@/lib/domain/format";
 import { validateProfileForm } from "@/lib/domain/profile-validation";
 import { createClient } from "@/lib/supabase/client";
-
-function formatAmount(value: number): string {
-  return formatMoneyInput(value.toFixed(2));
-}
 
 export default function PerfilPage() {
   const router = useRouter();
   const {
     state,
-    userEmail,
     ready,
     saveProfile,
     clearUserData,
     flushPendingDeletion,
   } = useStore();
   const [fullName, setFullName] = useState("");
-  const [retirementGoal, setRetirementGoal] = useState("");
-  const [retirementSaved, setRetirementSaved] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
-  const [deleteConfirmation, setDeleteConfirmation] = useState("");
-  const [deletingAccount, setDeletingAccount] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (!ready) return;
     setFullName(state.userName);
-    setRetirementGoal(formatAmount(state.metaAposentadoria));
-    setRetirementSaved(formatAmount(state.poupancaAposentadoria));
-  }, [
-    ready,
-    state.metaAposentadoria,
-    state.poupancaAposentadoria,
-    state.userName,
-  ]);
+  }, [ready, state.userName]);
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
-    const formValues = { fullName, retirementGoal, retirementSaved };
-    const validationError = validateProfileForm(formValues);
+    const validationError = validateProfileForm({ fullName });
     if (validationError) {
       setSaveError(validationError);
       setSaveSuccess(false);
       return;
     }
-
-    const goal = parseMoneyInput(retirementGoal, true);
-    const saved = parseMoneyInput(retirementSaved, true);
-    if (goal === null || saved === null) return;
 
     setSaving(true);
     setSaveError("");
@@ -70,8 +46,6 @@ export default function PerfilPage() {
     try {
       await saveProfile({
         full_name: fullName.trim(),
-        retirement_goal: goal,
-        retirement_saved: saved,
       });
       setSaveSuccess(true);
     } catch (error) {
@@ -103,33 +77,6 @@ export default function PerfilPage() {
     }
   }
 
-  async function handleDeleteAccount() {
-    if (deleteConfirmation !== "EXCLUIR" || deletingAccount) return;
-    setDeletingAccount(true);
-    setDeleteError("");
-    try {
-      await flushPendingDeletion();
-      const response = await fetch("/api/account/delete", { method: "POST" });
-      if (!response.ok) {
-        setDeleteError("Não foi possível excluir a conta. Tente novamente.");
-        setDeletingAccount(false);
-        return;
-      }
-
-      try {
-        await createClient().auth.signOut({ scope: "local" });
-      } finally {
-        clearUserData();
-        router.replace("/");
-        router.refresh();
-      }
-    } catch {
-      setDeleteError("Não foi possível excluir a conta. Tente novamente.");
-    } finally {
-      setDeletingAccount(false);
-    }
-  }
-
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <Header variant="close" closeHref="/home" />
@@ -141,8 +88,11 @@ export default function PerfilPage() {
           <>
             <form onSubmit={handleSave} className="mt-5 space-y-4">
               <div className="rounded-xl2 bg-mare-card p-4">
-                <label htmlFor="profile-name" className="block text-lg font-medium">
-                  Nome
+                <label
+                  htmlFor="profile-name"
+                  className="block text-lg font-medium"
+                >
+                  Nome ou apelido
                 </label>
                 <input
                   id="profile-name"
@@ -151,56 +101,6 @@ export default function PerfilPage() {
                   onChange={(event) => setFullName(event.target.value)}
                   className="mt-2 w-full bg-transparent text-lg focus:outline-none"
                 />
-              </div>
-
-              <div className="rounded-xl2 bg-mare-card p-4">
-                <label htmlFor="profile-email" className="block text-lg font-medium">
-                  E-mail
-                </label>
-                <input
-                  id="profile-email"
-                  type="email"
-                  autoComplete="email"
-                  value={userEmail}
-                  readOnly
-                  className="mt-2 w-full bg-transparent text-mare-slate focus:outline-none"
-                />
-              </div>
-
-              <div
-                id="retirement-goal-section"
-                className="rounded-xl2 bg-mare-card p-4"
-              >
-                <label
-                  htmlFor="retirement-goal"
-                  className="block text-lg font-medium"
-                >
-                  Meta da aposentadoria
-                </label>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-mare-slate">R$</span>
-                  <MoneyInput
-                    id="retirement-goal"
-                    value={retirementGoal}
-                    onValueChange={setRetirementGoal}
-                    className="w-full bg-transparent text-lg focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-xl2 bg-mare-card p-4">
-                <label htmlFor="retirement-saved" className="block text-lg font-medium">
-                  Valor guardado
-                </label>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-mare-slate">R$</span>
-                  <MoneyInput
-                    id="retirement-saved"
-                    value={retirementSaved}
-                    onValueChange={setRetirementSaved}
-                    className="w-full bg-transparent text-lg focus:outline-none"
-                  />
-                </div>
               </div>
 
               {saveError && (
@@ -237,40 +137,6 @@ export default function PerfilPage() {
                   {logoutError}
                 </p>
               )}
-            </section>
-
-            <section className="mt-6 rounded-xl2 border border-mare-negative p-4">
-              <h2 className="text-lg font-semibold text-mare-negative">Excluir minha conta</h2>
-              <p className="mt-2 text-lg text-mare-slate">
-                Esta ação é irreversível. Sua conta, perfil, vendas e gastos serão
-                excluídos permanentemente.
-              </p>
-              <label
-                htmlFor="delete-account-confirmation"
-                className="mt-4 block text-lg font-medium"
-              >
-                Digite EXCLUIR para confirmar
-              </label>
-              <input
-                id="delete-account-confirmation"
-                value={deleteConfirmation}
-                onChange={(event) => setDeleteConfirmation(event.target.value)}
-                autoComplete="off"
-                className="mt-2 min-h-14 w-full rounded-xl2 border border-black/10 px-3 text-lg"
-              />
-              {deleteError && (
-                <p role="alert" className="mt-2 text-lg text-mare-negative">
-                  {deleteError}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={handleDeleteAccount}
-                disabled={deleteConfirmation !== "EXCLUIR" || deletingAccount}
-                className="mt-4 min-h-14 w-full rounded-full bg-mare-negative py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {deletingAccount ? "Excluindo conta..." : "Excluir minha conta"}
-              </button>
             </section>
           </>
         )}
